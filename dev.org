@@ -1,0 +1,247 @@
+#+TITLE: Infograph
+#+STARTUP:nologdone
+
+* Intention
+** Desires
+*** Explicit origin
+		The origin of the canvas should be a point in space, not the upper left
+		corner. It should also default to the lower left corner so as to infuriate
+		CG veterans. Do we want axes or is that just silly? I want axes. Is that
+		sufficient reason?
+*** Moving the Canvas
+		Draging and zooming should move the canvas around as if it were a map. 
+
+		Interactive infographics (those not exported to pngs, gifs, etc.) should be
+		able to pan and zoom as well if the author desires since this can allow
+		exploration of far more data than is possibile in a fixed size. Lazy
+		rendering can allow images to be effectively infinite in scale, detail, or
+		both. I feel this will open up whole worlds of pedagogical value. 
+
+		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
+		friend graph (that would require more than a little data magic but I'm sure
+		somebody will get a kick out of making a library for it).
+*** Basic vector drawing widgets
+		Line, square, bezier cubic, circle, elipse, etc..
+
+		Free drawing should be allowed but we need some kind of constraint
+		satisfaction engine before we can force a free drawing to adhere to changing
+		data.
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+		
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+*** Graphical Adjustments
+		Every aspect of a shape you see should be adjustable in place just like
+		illustrator et al.. drag control points on bezier curves, drag lengths,
+		click centres to choose colour, gradient, etc.. The stroke types themselves
+		should be adjustable as such, but I'm not sure how to accomplish that
+		graphically.
+		
+		Dragging a data value into a point, line, etc. should link the data to the
+		property in question. The problem of course is that pointing is ambiguous
+		and easily misinterpreted. Data parsing and typing will solve some of the
+		problems: colours set colour, strings set string properties, lengths must be
+		numbers, pairs of numbers might be coordinates. But the ambiguity is still
+		there: a number dragged onto a line might be the length, its width, it might
+		be the angle to the origin, it might be the x or y translation, it might be
+		a label (but not very likely), so how do we disambiguate in an intuitive
+		manner?
+		
+		Each shape will have a list of properties, so if you drag the data over and
+		wait a split second, a little property list can pop up and you drag the data
+		to the correct one. This will be especially useful when the x and y
+		coordinates of a point are different paths in the data for instance. If by
+		the nature of the data and the properties we can make an educated guess as
+		to what the user means, then we should order the properties accordingly and
+		if the user just quickly drops the data without waiting for the menu then
+		bind it to the first entry (most likely guess).
+*** Code Adjustments
+		Sometimes you want more precision than a mouse offers. For this you should
+		be able to open the property list of an object and manually change the
+		values. Handy would be editing widgets a la Victor's magical editor from the
+		talk on principles. 
+
+		This will likely also be the only viable way to set constraints between
+		properties and data or to use compound data. E.g. you want a rectangle whose
+		width is always half its length which comes directly from data, or you want
+		a circle whose radius is some function of the number of other objects that
+		match a criterion.
+*** Higher Order Data
+		We will often want to drive visual objects from properties of the data in
+		aggregate (averages, percentages, number of categories, etc.) or functions
+		of the data (number of Xs OR Ys, people with more than N friends who voted
+		for a given party (this one is actually a query, but we can handle that
+		right? Spectre is a great candidate although I feel that it will need some
+		massaging so as not to scare away visual artists, journalist, teachers, and
+		the rest of humanity that I want to feel comfortable using this.
+		
+		This should be pluggable in a simple way so that people can share
+		aggregators, post-processors, etc.. Library design? Read jars from clojars
+		from the client and hotload cljs? That would require users to post to
+		clojars and I'm not sure that's realistic. Post stuff to clojars via ajax
+		from the browser? New repo site and mechanism? Sharing should be as simple
+		as tweeting, but finding code shouldn't be as hard as searching twitter...
+*** Dynamic Data Visualisation
+		Given example data (or a schema or spec) the program should parse that into
+		a nice little tree and try to guess the correct types of the fields and
+		provide a drag and drop interface from the data into the visual field. This
+		is much easier than the next point since it only goes one way. The data is
+		give and the image is generated from it. Just like a frame in react. 
+*** Duality of Drawing Code
+		The code that draws the shapes the user sees should be open to inspection
+		and modification. This is a whole other can of worms that I'd rather not
+		open at the moment but I do want to pursue this. Likely as next project.
+*** Simple Model of User Interaction
+		Steal a note from Elm and model user interation as just another data
+		stream. How far can I take this? Obviously what I want is a programming
+		environment that makes handling users clicking, draging, mousing around,
+		just the same as it handles drawing a rectangle and making its length
+		correspond to some property in data that you'll get from a server at
+		runtime.
+		
+		Will I get there? Who knows? but that's no reason not to try.
+*** Testability
+		I want these infographics to be truly dynamic. That means that you have an
+		example of the kind of data you're going to get, but in the real world you
+		don't know what the data is going to be until you get it. You should be able
+		to design an election map with random data and see it populate in real time
+		as you update the data from the polls.
+		
+		Problem: what if your data is structurally incorrect? 
+
+		Well the best we can do in this case is spot that there's going to be a
+		problem before we render complete nonsense and apologise profusely to the
+		user. This is hardly ideal. Perhaps we can specify fallback strategies,
+		allow properties to be marked as optional. But then how do we assure
+		ourselves that the graphic will still make sense when fields are ommitted?
+		
+		Problem: what if the data is structurally correct, but the example data is
+		unrepresentative in some way? E.g. all of the values for x in the example
+		set are between 0 and 300, but in reality they go up over 9000.
+		
+		Again the best we can do after the fact is simply catch absurdities and
+		error out with something approaching grace. Until we have 100M displays at
+		least.
+		
+		As far as I can see at the moment the only way to deal with these problems
+		is to try and prevent them. If we have specs for the visual objects, and we
+		can generate (or are given) specs for the data, then we can generate example
+		datasets, create graphics from them, and show the designer a (very) long
+		list of example graphics.
+
+		Basically generate data and pipe it through the pure rendering functions and
+		make the designer okay things. 
+
+		Binary search over N properties will get tedious so I doubt people will do
+		much of it. If we can find a way to specify property constraints (things
+		can't move off the screen, no circle should have a radius greater than the
+		width of the screen, the number of objects should be less than 1/10th the
+		number of pixels, &c.) then we can massively narrow down the number of
+		examples the designer needs to vet and even do a bunch of testing fully
+		automatically. Sort of. We still run into problems if the data that comes
+		from the real world doesn't match the model that the graphic was based on,
+		but when is that ever not a problem?
+		
+		So in short we should strive to protect the user against mistakes from
+		narrowness of vision, just poke them to think "oh yeah, that might be
+		negative", but there are always assumptions at the bottom. 
+
+		So what if the renderer can learn to improvise? Then I get rich? 
+** Examples That Should Work Out of the Box
+*** Heat map 
+		Array of values, or objects with a single value, x and y coords are
+		functions of index and colour function of value.
+		
+		Or array of objects with x, y, v props.
+
+		Or matrix representation of single values.
+*** Pie Chart
+*** Histogram
+*** Graphs (i.e. plots)
+*** Graphs (i.e. network graphs)
+*** Mandelbrot Set
+		Or other fractal patterns
+*** Lazy loading of infinite data
+		Presumably via AJAX
+*** 
+** Priorities
+	 1. Shape Data Model
+	 2. Data Data Model
+	 3. Canvas
+	 4. Data Vis
+	 5. Connections
+	 6. Code like editing
+
+* Notes
+** Shapes
+	 The representation of shapes is actually a bit tricky. Mostly because there
+	 are so many ways to think about shapes and I can think of interesting ways to
+	 tie each representation to data in new ways. Think of what polar coordinates
+	 make trivial that's absurd in cartesian coordinates. Think of what you can do
+	 by setting the end points of lines, and now think of what you can do by
+	 setting the centre point, length, and angle independently. In the second
+	 representation you have 4 legitamately independent variables that can show 4
+	 dimensions of data. In the first you have error bars, and other things that
+	 are really 2 independent 2 dimensional variables. That doesn't sound like
+	 much, but the difference is real.
+*** Representations of the Circle
+		A circle is in many ways the simplest shape. All representations are
+		isomorphic to a centre point and radius. Well that's not saying much. All
+		representations of the same shape are isomorphic by definition.
+		
+		An affine transformation of a circle scales it (changes the radius) and
+		translates it. So the connection is obvious.
+		
+		You can represent a circle by a point and a diametre vector, as per
+		Euclidean algebra. Again the transformation between the two coordinate
+		systems is obvious.
+		
+		
+* Sketchpad D3
+	Graphical interactive interactive infographic creation.
+	
+	Thinking about this as I walked to the market I got pretty excited. This is
+	such a simple demo of the basic idea with a clear and obvious use case for
+	lots and lots of people.
+	
+	Two panels: code on the left and a drawing tool on the right. Don't start
+	with free drawing, it's too messy and people won't use it for a lot of
+	things. We can get really far with line, rectangle, circle and elipse.
+	
+	Data will have a structure, so drag properties from your data (presumably the
+	objects) to the properties of the things you drew (lengths, colours, labels,
+	angles, whatever) to connect them. Now you can instantiate multiple objects
+	from you drawn prototype. Of course we need some kind of validation on the
+	incoming data, but we can probably generate specs given specs on the shapes
+	and the user entered connections!.
+	
+	Arrays of things either represent a sequence in time, a sequence in space, or
+	a bag that should be a set but is a vector because people just do that all
+	too often. Or it's a struct with implicitely ordered fields, but let's
+	pretend we never thought of that.
+	
+	So say the user has a vector of things. They can choose to either treat those
+	things as a sequence in time (frames in an animation, for instance). or as
+	things arranged in space. That arrangement in space is infinitely flexible
+	and up to the user's skills as an artist. Basic examples would be a
+	histogram, a pie chart, widgets for countries superimposed on a map, cells in
+	the game of life, a link analysis graph. The link graph is interesting
+	because those are notoriously finnicky, and we are going to need some kind of
+	constraint solver to make it reasonable (the nodes can't overlap, the angles
+	between edges on a node should endeavour to be equal, that kind of thing).
+	
+	To deal with heterogenous lists we should be able to put switches into the
+	processing that analyse each thing and draw the correct image for it. That's
+	obvious in retrospect, but then what isn't?
+	
+	Let's go back to that dual representation of objects as finished unto
+	themselves, and as affine transformations of normalised objects. That would
+	let us effect the position and orientation of shapes as well as their own
+	properties. But the duality will let you completely ignore the affine aspect
+	unless you want to use it.
+
+
+	
