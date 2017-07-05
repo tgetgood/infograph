@@ -2,7 +2,7 @@
   :description "Graphical Interactive Interactive Infographic Development"
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
-                 [org.clojure/clojurescript "1.9.562"]
+                 [org.clojure/clojurescript "1.9.660"]
                  [org.clojure/core.async "0.3.443"
                   :exclusions [org.clojure/tools.reader]]
                  [devcards "0.2.3"]
@@ -21,7 +21,7 @@
 
   :profiles
   {:dev
-   {:dependencies [[binaryage/devtools "0.8.2"]
+   {:dependencies [[binaryage/devtools "0.9.4"]
                    [figwheel-sidecar "0.5.10"]
                    [com.cemerick/piggieback "0.2.1"]]
     :plugins      [[lein-figwheel "0.5.10"]]}} 
@@ -36,6 +36,7 @@
                     :output-dir           "resources/public/js/compiled/out"
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
+                    :parallel-build       true
                     :preloads             [devtools.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}}}
 
@@ -47,6 +48,7 @@
                     :output-to            "resources/public/js/compiled/devcards.js"
                     :output-dir           "resources/public/js/compiled/devcards_out"
                     :source-map-timestamp true
+                    :parallel-build       true
                     :preloads             [devtools.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}}}
 
@@ -55,5 +57,6 @@
      :compiler     {:main            infograph.core
                     :output-to       "resources/public/js/compiled/app.js"
                     :optimizations   :advanced
+                    :parallel-build  true
                     :closure-defines {goog.DEBUG false}
                     :pretty-print    false}}]})

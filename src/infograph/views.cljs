@@ -1,8 +1,11 @@
 (ns infograph.views
-  (:require [re-frame.core :as re-frame]))
+  (:require [infograph.css :as css]
+            [infograph.input :as input]
+            [re-frame.core :as re-frame]
+            [reagent.core :as reagent]))
 
 (defn event [name]
-  (keyword :infograph.events name))
+  (keyword :infograph.views name))
 
 (defn canvas-inner []
   (reagent/create-class
@@ -15,7 +18,8 @@
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
     :reagent-render       (fn []
                             [:canvas
-                             (assoc events/canvas-event-map
+                             {:id "the-canvas"}
+                             #_(assoc events/canvas-event-map
                                     :id "the-canvas")])}))
 
 (defn canvas-panel [drawing]
@@ -37,6 +41,50 @@
       [canvas-panel @drawing])))
 
 (defn main-panel []
-  (let [name (re-frame/subscribe [:name])]
-    (fn []
-      [:div "Hello from " @name])))
+  [css/row
+   [input/data-panel input/nice-vec]
+   [canvas-panel {}]])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Effects
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn canvas []
+  ;;FIXME: This won't do very shortly
+  (.getElementById js/document "the-canvas"))
+
+(defn get-ctx []
+  (when-let [canvas (canvas)]
+    (.getContext canvas "2d")))
+
+(defn width [] (quot (.-innerWidth js/window) 2))
+(defn height [] (.-innerHeight js/window))
+
+(defn set-canvas-size! [canvas]
+  (set! (.-width canvas) (- (width) 10))
+  (set! (.-height canvas) (- (height) 10)))
+
+(defn clear! [ctx]
+  (.clearRect ctx 0 0 (width) (height)))
+
+(re-frame/reg-fx
+ ::redraw-canvas!
+ (fn [drawing]
+   (when drawing
+     (when-let [ctx (get-ctx)]
+       ))))
+
+(re-frame/reg-fx
+ ::resize-canvas!
+ (fn [_]
+   (set-canvas-size! (canvas))))
+
+(re-frame/reg-event-fx
+ ::resize-canvas
+ (fn [_ _]
+   {::resize-canvas! true}))
+
+(re-frame/reg-event-fx
+ ::redraw-canvas
+ (fn [{[_ d] :event :as a}]
+   {::redraw-canvas! d}))

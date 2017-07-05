@@ -1,4 +1,5 @@
-(ns infograph.db)
+(ns infograph.db
+  (:require [infograph.input :as input]))
 
 (def default-db
-  {:name "re-frame"})
+  {:data input/nice-map})
