@@ -5,7 +5,22 @@
             [reagent.core :as reagent]))
 
 (defn event [name]
-  (keyword :infograph.views name))
+  (keyword :infograph.events name))
+
+(defmulti canvas-handler (fn [mode e] mode) :default :none)
+
+(defmethod canvas-handler :none [_ _])
+
+(defmethod canvas-handler :line
+  [_ e]
+  (.log js/console e))
+
+(defn canvas-click-handler
+  "Handling clicks on canvas basically involves writing your own gui system from
+  scratch. Difficult? yes. Exciting? yes. Useful? I certainly hope so."
+  [mode]
+  (fn [e]
+    (canvas-handler mode e)))
 
 (defn canvas-inner []
   (reagent/create-class
@@ -16,14 +31,33 @@
     :component-did-update (fn [this]
                             (let [drawing (reagent/props this)]
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
-    :reagent-render       (fn []
-                            [:canvas
-                             {:id "the-canvas"}
-                             #_(assoc events/canvas-event-map
-                                    :id "the-canvas")])}))
+    :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
+                            (fn []
+                              [:canvas
+                               ;; REVIEW: I don't like the globalness of using
+                               ;; the element ID to access the canvas throughout
+                               ;; the app. What do we do if we suddenly want
+                               ;; multiple canvases? What's a better way to do
+                               ;; this?
+                               {:id "the-canvas"
+                                :on-click (canvas-click-handler @mode)}]))}))
 
 (defn canvas-panel [drawing]
   [canvas-inner drawing])
+
+(defn input-mode [type]
+  {:on-click
+   (fn [_]
+     (re-frame/dispatch [:set-input-mode type]))})
+
+(defn widgets-panel []
+  [css/row
+   [css/button (input-mode :line) "line"]
+   [css/button (input-mode :polyline) "polyline"]
+   [css/button (input-mode :rectangle) "rectangle"]
+   [css/button (input-mode :polygon) "polygon"]
+   [css/button (input-mode :circle) "circle"]
+   [css/button (input-mode :ellipse) "ellipse"]])
 
 ;; HACK: This convention of having pure components and wired components serves a
 ;; good purpose: it encourages components to be pure and stateless, which makes
@@ -36,55 +70,14 @@
 ;; TODO: Keep an eye out for better ways to accomplish this.
 
 (defn wired-panel []
-  (let [drawing (re-frame/subscribe [:current-shape-data])]
+  (let [drawing (re-frame/subscribe [:draw-data])]
     (fn []
-      [canvas-panel @drawing])))
+      [:div
+       [widgets-panel]
+       [canvas-panel @drawing]])))
 
 (defn main-panel []
   [css/row
-   [input/data-panel input/nice-vec]
-   [canvas-panel {}]])
+   [input/wired-data]
+   [wired-panel]])
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Effects
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn canvas []
-  ;;FIXME: This won't do very shortly
-  (.getElementById js/document "the-canvas"))
-
-(defn get-ctx []
-  (when-let [canvas (canvas)]
-    (.getContext canvas "2d")))
-
-(defn width [] (quot (.-innerWidth js/window) 2))
-(defn height [] (.-innerHeight js/window))
-
-(defn set-canvas-size! [canvas]
-  (set! (.-width canvas) (- (width) 10))
-  (set! (.-height canvas) (- (height) 10)))
-
-(defn clear! [ctx]
-  (.clearRect ctx 0 0 (width) (height)))
-
-(re-frame/reg-fx
- ::redraw-canvas!
- (fn [drawing]
-   (when drawing
-     (when-let [ctx (get-ctx)]
-       ))))
-
-(re-frame/reg-fx
- ::resize-canvas!
- (fn [_]
-   (set-canvas-size! (canvas))))
-
-(re-frame/reg-event-fx
- ::resize-canvas
- (fn [_ _]
-   {::resize-canvas! true}))
-
-(re-frame/reg-event-fx
- ::redraw-canvas
- (fn [{[_ d] :event :as a}]
-   {::redraw-canvas! d}))
