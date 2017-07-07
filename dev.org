@@ -297,7 +297,79 @@
 	 of objects recurse (what if it contains an array of values?). Can this
 	 capture enough context to draw what the user wants?
 ** Graphic Design Model
+** Interactive Canvas
+	 So we don't have an event model on canvas. I knew that, but I've been putting
+	 off thinking about it.
 
+	 Basically we want something finite state machine like. Given the JS event
+	 model, we may as well use continuations for control. Clean it up with
+	 core.async though.
+
+	 So a click or a dragstart or a hover will create a new continuation which
+	 will listen on some sort of pub-sub setup for whatever kinds of events it's
+	 interested. It will emit new state as a side effect into the app-db — which
+	 will be a likely source of trouble — and will eventually teminate. So think
+	 of the canvas handler as an actor factory where the actors are always short
+	 lived. So coroutines. But not quite since they get messages over async
+	 channels. I'm sure this wheel has been invented before.
+
+	 Anywho, that seems reasonable. It will allow multiple of these things to be
+	 running at once so that designs can react in parallel to user input.
+
+	 There's going to be trouble with reloading since the current user action will
+	 be spread out through async oblivion. I suppose I can solve this with an elm
+	 like approach where the state of this mess of continuations is a function of
+	 a stream of events. So I can save the user inputs, clear the system, restart
+	 it, and play them back. Checkpointing will be pretty easy since once an actor
+	 exits, the events it consumed are persistent in the app state, so if no
+	 living actor has cared about an event we can drop it.
+
+	 State management is also going to be a problem. The user selects the line
+	 widget, then clicks, drags, and releases on the canvas. We need this event to
+	 add a line from click start to click end to the drawing state. Dragging a
+	 value from the data into the canvas should trigger popups when the drag
+	 pauses over a visual object. Dropping into a visual object before the popup
+	 appears needs to directly update the state. And so on.
+
+	 All of the above is easily enough done, but we need to retain enough
+	 tracability and transparency that we don't end up in a tar pit. That sounds
+	 exciting.
+
+	 Lots of exciting edge cases to worry about. Like the fact that every visual
+	 object currently on the screen needs to listen for hover and dragover
+	 events. These guys are in fact going to be more or less permanent.
+
+	 Q: How do we tie the set of actors corresponding to the shape to the shape
+	 itself? Well actors and objects are heavily related, so why don't we have the
+	 canvas state be a set of records. One for each visual object and one for the
+	 canvas itself (we want to be able to zoom and pan the canvas itself, and we
+	 need something to listen to clicks and create the constructor objects
+	 (special temporary visual objects that exist only to provide visual feedback
+	 when making new visual objects.
+*** Details
+		So we have 3 kinds of visual objects.
+
+		1. The canvas itself
+		2. Constructor objects
+		3. Normal visual objects
+
+		These can be implemented as records. The UI can extract the draw info out of
+		the records. The records themselves could be responsible for instantiating
+		the drawings with the data. That needs a bit more thought. These records can
+		implement protocols for handling user input. Then we can have a central
+		pub-sub system that notifies all records that implement a given protocol
+		when the associated events come in. I don't see a down side here just yet.
+
+		The amount of computation involved in a user click could easily grow out of
+		hand as the number of objects subscribing grows. The objects need a
+		knowledge of themselves in space so that they can cheaply decide if an event
+		concerns them. Moreover this proprioception should be exposed so that if it
+		comes to it a higher level dispatch agent can more efficiently decide to
+		whom to send which events. That's an optimisation that we can ignore
+		temporarily.
+
+		N.B.: Run a test on this as soon as we can to make sure that scaling isn't
+		completely attrocious. We want this to be usable.
 
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
