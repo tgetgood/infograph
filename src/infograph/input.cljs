@@ -54,7 +54,8 @@
                   :max 2000
                   :on-click #(.stopPropagation %)
                   :on-change #(re-frame/dispatch
-                               [:set! p (int (.-value (.-target %)))])
+                               [:update-data-value p
+                                (int (.-value (.-target %)))])
                   :type :range}])])))
 
 (defn boolean-component

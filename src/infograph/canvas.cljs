@@ -32,3 +32,28 @@
   (draw* ctx path)
   (.stroke ctx)
   (.closePath ctx))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Canvas Event Handling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn click-location [e]
+  (let [c (canvas)]
+    [(- (.-pageX e) (.-offsetLeft c))
+     (- (.-pageY e) (.-offsetTop c))]))
+
+(defmulti canvas-handler (fn [mode e] mode) :default :none)
+
+(defmethod canvas-handler :none [_ _])
+
+(defmethod canvas-handler :line
+  [_ e]
+
+  (-> e click-location js/console.log))
+
+(defn canvas-click-handler
+  "Handling clicks on canvas basically involves writing your own gui system from
+  scratch. Difficult? yes. Exciting? yes. Useful? I certainly hope so."
+  [mode]
+  (fn [e]
+    (canvas-handler mode e)))

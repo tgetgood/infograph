@@ -1,26 +1,12 @@
 (ns infograph.views
-  (:require [infograph.css :as css]
+  (:require [infograph.canvas :as canvas]
+            [infograph.css :as css]
             [infograph.input :as input]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
 
 (defn event [name]
   (keyword :infograph.events name))
-
-(defmulti canvas-handler (fn [mode e] mode) :default :none)
-
-(defmethod canvas-handler :none [_ _])
-
-(defmethod canvas-handler :line
-  [_ e]
-  (.log js/console e))
-
-(defn canvas-click-handler
-  "Handling clicks on canvas basically involves writing your own gui system from
-  scratch. Difficult? yes. Exciting? yes. Useful? I certainly hope so."
-  [mode]
-  (fn [e]
-    (canvas-handler mode e)))
 
 (defn canvas-inner []
   (reagent/create-class
@@ -31,7 +17,8 @@
     :component-did-update (fn [this]
                             (let [drawing (reagent/props this)]
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
-    :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
+    :reagent-render       (let [mode (re-frame/subscribe [:input-mode])
+                                clfn (canvas/canvas-click-handler @mode)]
                             (fn []
                               [:canvas
                                ;; REVIEW: I don't like the globalness of using
@@ -40,7 +27,11 @@
                                ;; multiple canvases? What's a better way to do
                                ;; this?
                                {:id "the-canvas"
-                                :on-click (canvas-click-handler @mode)}]))}))
+                                :on-click clfn
+                                :on-mouse-down clfn
+                                :on-mouse-up clfn
+                                :on-mouse-move clfn
+                                }]))}))
 
 (defn canvas-panel [drawing]
   [canvas-inner drawing])
