@@ -298,54 +298,67 @@
 	 capture enough context to draw what the user wants?
 ** Graphic Design Model
 ** Interactive Canvas
-	 So we don't have an event model on canvas. I knew that, but I've been putting
-	 off thinking about it.
+*** Ramblings
+		So we don't have an event model on canvas. I knew that, but I've been putting
+		off thinking about it.
 
-	 Basically we want something finite state machine like. Given the JS event
-	 model, we may as well use continuations for control. Clean it up with
-	 core.async though.
+		Basically we want something finite state machine like. Given the JS event
+		model, we may as well use continuations for control. Clean it up with
+		core.async though.
 
-	 So a click or a dragstart or a hover will create a new continuation which
-	 will listen on some sort of pub-sub setup for whatever kinds of events it's
-	 interested. It will emit new state as a side effect into the app-db — which
-	 will be a likely source of trouble — and will eventually teminate. So think
-	 of the canvas handler as an actor factory where the actors are always short
-	 lived. So coroutines. But not quite since they get messages over async
-	 channels. I'm sure this wheel has been invented before.
+		So a click or a dragstart or a hover will create a new continuation which
+		will listen on some sort of pub-sub setup for whatever kinds of events it's
+		interested. It will emit new state as a side effect into the app-db — which
+		will be a likely source of trouble — and will eventually teminate. So think
+		of the canvas handler as an actor factory where the actors are always short
+		lived. So coroutines. But not quite since they get messages over async
+		channels. I'm sure this wheel has been invented before.
 
-	 Anywho, that seems reasonable. It will allow multiple of these things to be
-	 running at once so that designs can react in parallel to user input.
+		Anywho, that seems reasonable. It will allow multiple of these things to be
+		running at once so that designs can react in parallel to user input.
 
-	 There's going to be trouble with reloading since the current user action will
-	 be spread out through async oblivion. I suppose I can solve this with an elm
-	 like approach where the state of this mess of continuations is a function of
-	 a stream of events. So I can save the user inputs, clear the system, restart
-	 it, and play them back. Checkpointing will be pretty easy since once an actor
-	 exits, the events it consumed are persistent in the app state, so if no
-	 living actor has cared about an event we can drop it.
+		There's going to be trouble with reloading since the current user action will
+		be spread out through async oblivion. I suppose I can solve this with an elm
+		like approach where the state of this mess of continuations is a function of
+		a stream of events. So I can save the user inputs, clear the system, restart
+		it, and play them back. Checkpointing will be pretty easy since once an actor
+		exits, the events it consumed are persistent in the app state, so if no
+		living actor has cared about an event we can drop it.
 
-	 State management is also going to be a problem. The user selects the line
-	 widget, then clicks, drags, and releases on the canvas. We need this event to
-	 add a line from click start to click end to the drawing state. Dragging a
-	 value from the data into the canvas should trigger popups when the drag
-	 pauses over a visual object. Dropping into a visual object before the popup
-	 appears needs to directly update the state. And so on.
+		State management is also going to be a problem. The user selects the line
+		widget, then clicks, drags, and releases on the canvas. We need this event to
+		add a line from click start to click end to the drawing state. Dragging a
+		value from the data into the canvas should trigger popups when the drag
+		pauses over a visual object. Dropping into a visual object before the popup
+		appears needs to directly update the state. And so on.
 
-	 All of the above is easily enough done, but we need to retain enough
-	 tracability and transparency that we don't end up in a tar pit. That sounds
-	 exciting.
+		All of the above is easily enough done, but we need to retain enough
+		tracability and transparency that we don't end up in a tar pit. That sounds
+		exciting.
 
-	 Lots of exciting edge cases to worry about. Like the fact that every visual
-	 object currently on the screen needs to listen for hover and dragover
-	 events. These guys are in fact going to be more or less permanent.
+		Lots of exciting edge cases to worry about. Like the fact that every visual
+		object currently on the screen needs to listen for hover and dragover
+		events. These guys are in fact going to be more or less permanent.
 
-	 Q: How do we tie the set of actors corresponding to the shape to the shape
-	 itself? Well actors and objects are heavily related, so why don't we have the
-	 canvas state be a set of records. One for each visual object and one for the
-	 canvas itself (we want to be able to zoom and pan the canvas itself, and we
-	 need something to listen to clicks and create the constructor objects
-	 (special temporary visual objects that exist only to provide visual feedback
-	 when making new visual objects.
+		Q: How do we tie the set of actors corresponding to the shape to the shape
+		itself? Well actors and objects are heavily related, so why don't we have the
+		canvas state be a set of records. One for each visual object and one for the
+		canvas itself (we want to be able to zoom and pan the canvas itself, and we
+		need something to listen to clicks and create the constructor objects
+		(special temporary visual objects that exist only to provide visual feedback
+		when making new visual objects.
+*** Questions
+		Should all visual objects be children of the canvas object? Should visual
+		objects have children on their own? It makes perfect sense to represent a
+		rectangle as a line, or as four lines with constraints, but are we trapping
+		ourselves by allowing these relations to be reified in the object model? I
+		think so. My thinking at the moment is that the visual objects should be
+		those things the user explicitely creates. Might it make sense to allow
+		agglomerates? Might it then make sense to have equivalences and dynamic
+		tansformations between equivalents? How would I do that?
+	
+		So what do we do about multiple event listeners and bubbling? I don't know
+		much about these things. I might be getting out of my depth...
 *** Details
 		So we have 3 kinds of visual objects.
 
@@ -370,6 +383,49 @@
 
 		N.B.: Run a test on this as soon as we can to make sure that scaling isn't
 		completely attrocious. We want this to be usable.
+		
+**** Events to be dealt with
+		 - wheel
+		 - click
+		 - mouse-down
+		 - mouse-move
+		 - mouse-up
+		 - click end
+		 - touch start
+		 - touch move
+		 - touch end
+		 - dragstart
+		 - drag
+		 - drop
+		 - dragend
+		 - hover
+		 - dblclick?
+		 - right-click?
+**** Action Types
+***** Pan and zoom on canvas
+			 - wheel
+			 - mouse-down
+			 - mouse-move
+			 - mouse-up
+			 - touch-*
+***** Drag data link into visual object
+			- drag-end
+			- drop
+			- hover
+***** Visual object creation 
+			- mouse-down
+			- mouse-move
+			- mouse-up
+			- touch-start
+			- touch-move
+			- touch-end
+***** VO manipulation
+			Moving, resizing, other standard svg like stuff
+			- mouse-*
+			- touch-*
+***** 
+
+*** Surrounding bits
 
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.

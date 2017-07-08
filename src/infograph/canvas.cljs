@@ -1,4 +1,6 @@
-(ns infograph.canvas)
+(ns infograph.canvas
+  (:require [infograph.shapes :as shapes]
+            [re-frame.core :as re-frame]))
 
 (defn canvas []
   ;;FIXME: This won't do very shortly
@@ -18,18 +20,96 @@
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
 
-(defmulti draw* (fn [_ x] (:type x)))
+;; (defmulti draw* (fn [_ x] (:type x)))
 
-(defmethod draw* :default [_ _])
+;; (defmethod draw* :default [_ _])
 
-(defmethod draw* :line
-  [ctx {[x1 y1] :start [x2 y2] :end}]
-  (.moveTo ctx x1 y1)
-  (.lineTo ctx x2 y2))
+;; (defmethod draw* :line
+;;   [ctx {[x1 y1] :start [x2 y2] :end}]
+;;   (.moveTo ctx x1 y1)
+;;   (.lineTo ctx x2 y2))
 
-(defn draw! [ctx path]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Protocols
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defprotocol Shape
+  "Protocol that must be implemented by all shapes."
+  ;; Expose the inner structure in some format
+  (properties [this])
+  ;; Create a concrete visual object from the given data and this abstract
+  ;; visual object
+  (instantiate [this data]))
+
+(defprotocol Draw
+  (draw [this ctx]))
+
+;; REVIEW: Do we parse the events in the handler, here, or in an intermediate
+;; layer? Here would couple us to the events, but the dom changes very
+;; slowly. In the event handler could prevent annoyances with the proxy and
+;; virtual events.
+
+;; REVIEW: Should these be named after what they do or what they handle? Should
+;; we in fact have one protocol per event? Per event family?
+
+;; Events to be handled:
+;;
+;; wheel
+;; 
+(defprotocol Wheel
+  (wheel [this e]))
+
+(defprotocol Motion
+  (start [this loc])
+  (move [this loc])
+  (end [this loc]))
+
+(defprotocol IDroppable
+  (f [_]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Shapes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn create-line [props]
+  (reify
+    Shape
+    (properties [_] props)
+    (instantiate [_ data] (shapes/instantiate props data))
+
+    Draw
+    (draw [this ctx]
+      (let [{[x1 y1] :start [x2 y2] :end} (shapes/instantiate this data)]
+        (.moveTo ctx x1 y1)
+        (.lineTo ctx x2 y2)))))
+
+(defn line-constructor
+  ([p] (line-constructor [p p]))
+  ([p q]
+   (reify
+     Draw
+     (draw [_ ctx]
+       (let [[x1 y1] p
+             [x2 y2] q]
+         ;; REVIEW: I think I need to return this as data and write a separate
+         ;; renderer. Use case: Drawing these lines might be more obvious if you
+         ;; saw a greyed out rectangle with the line as diagonal, or some such.
+        (.moveTo ctx x1 y1)
+        (.lineTo ctx x2 y2)))
+     
+     Motion
+     (move [this loc]
+       (line-constructor p loc))
+     (end [_ loc]
+       (create-line {:start p :end q :type :line})))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Handy Helper
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn draw! [ctx vo]
   (.beginPath ctx)
-  (draw* ctx path)
+  (draw vo ctx)
   (.stroke ctx)
   (.closePath ctx))
 
@@ -42,18 +122,63 @@
     [(- (.-pageX e) (.-offsetLeft c))
      (- (.-pageY e) (.-offsetTop c))]))
 
-(defmulti canvas-handler (fn [mode e] mode) :default :none)
+;; Layer of indirection 1 maps dom events on the canvas element to abstractions
+;; that I build for my own convenience. This allows the visual objects to
+;; subscribe to higher level services.'
+;;
+;; Layer 2 takes those abstractions and maps them to the visual objects which
+;; subscribe to them.
+;;
+;; That seems reasonable, no?
+;;
+;; Event Abstractions:
+;;
+;; Motion: This consists of mouse-down, touch-start, move and up/end. Basically
+;; what you can think of as a stroke. Maybe stroke is a better name.
+;;
+;; Zoom: scrolling with wheel or two fingers on trackpad/touchscreen
+;;
 
-(defmethod canvas-handler :none [_ _])
+(def ^:dynamic *mode* :none)
 
-(defmethod canvas-handler :line
-  [_ e]
+(def event-map
+  (atom {:wheel #{}
+         :mouse-down #{}}))
 
-  (-> e click-location js/console.log))
+(def vo-map (atom {:motion #{}}))
 
-(defn canvas-click-handler
-  "Handling clicks on canvas basically involves writing your own gui system from
-  scratch. Difficult? yes. Exciting? yes. Useful? I certainly hope so."
-  [mode]
-  (fn [e]
-    (canvas-handler mode e)))
+;; Now what should cb be? 
+(defn register! [m ev cb]
+  (swap! m update ev conj cb))
+
+(defn unregister! [m ev cb]
+  (swap! m update ev disj cb))
+
+(defn handler [type mode e]
+  (binding [*mode* mode]
+    (doseq [cb (get @event-map type)]
+      (cb type e))))
+
+(defprotocol AbstractEvent
+  (can-invoke? [this o])
+  (handle [this t ev]))
+
+(def motion
+  ;; if receives :mouse-down or :touch-start do:
+  (reify
+    AbstractEvent
+    (can-invoke? [_ o] (satisfies? Motion o))
+    (handle [_ type ev]
+      (let [loc (click-location ev)]
+        (doseq [o (get @vo-map :motion)]
+          (cond
+            (contains? #{:mouse-down :touch-start} type)
+            (start o loc)
+
+            (contains? #{:mouse-move :touch-move} type)
+            (move o loc)
+
+            (contains? #{:mouse-up :touch-end} type)
+            (end o loc)))))))
+
+

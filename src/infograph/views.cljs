@@ -8,6 +8,27 @@
 (defn event [name]
   (keyword :infograph.events name))
 
+(defn ev->handler [ev]
+  (keyword (str "on-" (name ev))))
+
+(def events
+  [:wheel
+   :click
+   :mouse-down
+   :mouse-move
+   :mouse-up
+   :touch-start
+   :touch-move
+   :touch-end
+   ;; Looks like we're going to have to deal with hover from scratch now as well
+   ])
+
+(defn canvas-event-handlers [mode]
+  (into {}
+        (map (fn [x]
+               [(ev->handler x) (partial canvas/handler x mode)])
+          events)))
+
 (defn canvas-inner []
   (reagent/create-class
    {:component-did-mount  (fn [this]
@@ -17,8 +38,7 @@
     :component-did-update (fn [this]
                             (let [drawing (reagent/props this)]
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
-    :reagent-render       (let [mode (re-frame/subscribe [:input-mode])
-                                clfn (canvas/canvas-click-handler @mode)]
+    :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
                             (fn []
                               [:canvas
                                ;; REVIEW: I don't like the globalness of using
@@ -26,12 +46,8 @@
                                ;; the app. What do we do if we suddenly want
                                ;; multiple canvases? What's a better way to do
                                ;; this?
-                               {:id "the-canvas"
-                                :on-click clfn
-                                :on-mouse-down clfn
-                                :on-mouse-up clfn
-                                :on-mouse-move clfn
-                                }]))}))
+                               (assoc (canvas-event-handlers @mode)
+                                      :id "the-canvas")]))}))
 
 (defn canvas-panel [drawing]
   [canvas-inner drawing])

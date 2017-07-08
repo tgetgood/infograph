@@ -5,5 +5,5 @@
 (def default-db
   {:data input/nice-map
    :canvas-input-mode :none
-   :current-shape shapes/data-bound-shape})
+   :canvas #{}})
 

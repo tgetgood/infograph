@@ -34,6 +34,7 @@
   [x p]
   (fn []
     [:span {:style {:color "#a11"}
+            :on-touch-move #(do (.preventDefault %))
             :draggable true}
      x]))
 
