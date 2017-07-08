@@ -22,6 +22,16 @@
  (fn [db [_ mode]]
    (assoc db :canvas-input-mode mode)))
 
+(re-frame/reg-event-db
+ :remove-vo
+ (fn [db [_ vo]]
+   (update db :canvas disj vo)))
+
+(re-frame/reg-event-db
+ :add-vo
+ (fn [db [_ vo]]
+   (update db :canvas conj vo)))
+
 ;;;;; FX
  
 (re-frame/reg-fx
