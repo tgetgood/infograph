@@ -29,14 +29,20 @@
                [(ev->handler x) (partial canvas/handler x mode)])
           events)))
 
+(defn- manual-props
+  "Why??"
+  ;; HACK: reagent has a fn for this. Why isn't it working?
+  [this]
+  (-> this (aget "props") (aget "argv") second))
+
 (defn canvas-inner []
   (reagent/create-class
    {:component-did-mount  (fn [this]
                             (re-frame/dispatch [(event :resize-canvas)])
-                            (let [drawing (reagent/props this)]
+                            (let [drawing (manual-props this)]
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
     :component-did-update (fn [this]
-                            (let [drawing (reagent/props this)]
+                            (let [drawing (manual-props this)]
                               (re-frame/dispatch [(event :redraw-canvas) drawing])))
     :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
                             (fn []
@@ -77,7 +83,7 @@
 ;; TODO: Keep an eye out for better ways to accomplish this.
 
 (defn wired-panel []
-  (let [drawing (re-frame/subscribe [:draw-data])]
+  (let [drawing (re-frame/subscribe [:canvas])]
     (fn []
       [:div
        [widgets-panel]

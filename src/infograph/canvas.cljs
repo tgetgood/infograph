@@ -58,11 +58,12 @@
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
 
-(defn draw! [ctx vo]
-  (.beginPath ctx)
-  (draw vo ctx)
-  (.stroke ctx)
-  (.closePath ctx))
+(defn draw! [ctx vos]
+  (doseq [vo vos]
+    (.beginPath ctx)
+    (draw vo ctx)
+    (.stroke ctx)
+    (.closePath ctx)))
 
 (defn click-location [e]
   (let [c (canvas)]
@@ -96,6 +97,13 @@
 ;; event managers to specify which methods they're interested in having
 ;; invoked. I feel like there's a much simpler structure for that though if it
 ;; becomes necessary. 
+;;
+;;
+;; So on further thought, this is a pretty crummy solution. The basic idea is
+;; good, but the registration creates too much coupling. Should be using queues
+;; or channels instead. Also the mode should be looked up via
+;; re-frame/subscribe, we don't need dynamic binding. Anyway this is good enough
+;; for now. Get something that can be used.
 
 (def ^:dynamic *mode* :none)
 
@@ -173,25 +181,34 @@
         (.lineTo ctx x2 y2)))))
 
 (defn line-constructor
-  ([p] (line-constructor [p p]))
+  ([p] (line-constructor p p))
   ([p q]
-   (reify
-     Draw
-     (draw [_ ctx]
-       (let [[x1 y1] p
-             [x2 y2] q]
-         ;; REVIEW: I think I need to return this as data and write a separate
-         ;; renderer. Use case: Drawing these lines might be more obvious if you
-         ;; saw a greyed out rectangle with the line as diagonal, or some such.
-        (.moveTo ctx x1 y1)
-        (.lineTo ctx x2 y2)))
-     
-     Motion
-     (move [this loc]
-       (re-frame/dispatch [:remove-vo this])
-       (re-frame/dispatch [:add-vo (line-constructor p loc)]))
-     (end [_ loc]
-       (line {:start p :end q :type :line})))))
+   (let [this
+         (reify
+           Draw
+           (draw [_ ctx]
+             (let [[x1 y1] p
+                   [x2 y2] q]
+               ;; REVIEW: I think I need to return this as data and write a
+               ;; separate renderer. Use case: Drawing these lines might be more
+               ;; obvious if you saw a greyed out rectangle with the line as
+               ;; diagonal, or some such.
+               (.moveTo ctx x1 y1)
+               (.lineTo ctx x2 y2)))
+           
+           Motion
+           (move [this loc]
+             (.log js/console "move")
+             (re-frame/dispatch [:remove-vo this])
+             (re-frame/dispatch [:add-vo (line-constructor p loc)]))
+           (end [this loc]
+             j
+             (re-frame/dispatch [:remove-vo this])
+             (re-frame/dispatch [:add-vo (line {:start p
+                                                :end q
+                                                :type :line})])))]
+     (register! motion this)
+     this)))
 
 
 (def constructor
@@ -200,10 +217,10 @@
    (lazy-map
     [:mouse-down :touch-start]
     (fn [_ ev]
-      (.log js/console ev)
       (let [loc (click-location ev)]
+        (.log js/console *mode*)
         (cond
           (= *mode* :line) (re-frame/dispatch [:add-vo (line-constructor loc)])
-          :else (js/alert "hi mom")))))))
+          :else 3))))))
 
 (register! constructor (reify Motion (start [_ _]) (move [_ _]) (end [_ _])))

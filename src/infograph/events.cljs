@@ -75,9 +75,6 @@
    (:canvas-input-mode db)))
 
 (re-frame/reg-sub
- :draw-data
- (fn [_ _]
-   {:shape (re-frame/subscribe [:current-shape])
-    :data (re-frame/subscribe [:data])})
- (fn [{:keys [shape data]} _]
-   (shapes/instantiate shape data)))
+ :canvas
+ (fn [db _]
+   (:canvas db)))
