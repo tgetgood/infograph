@@ -296,6 +296,13 @@
 	 parse it, if a property contains an object recurse, if it contains an array
 	 of objects recurse (what if it contains an array of values?). Can this
 	 capture enough context to draw what the user wants?
+*** Considerations
+		We pass in a data structure to a shape schema. That schema then has to apply
+		parts of the data structure to its own subschemata. So a schema needs to
+		contain (or be) a mapping from paths to schemata. In the end there will be
+		values. Do we need a special schema property, or do we just let things
+		bottom out kind of naturally?
+
 ** Graphic Design Model
 ** Interactive Canvas
 *** Ramblings
@@ -425,8 +432,103 @@
 			- touch-*
 ***** 
 
-*** Surrounding bits
+*** Ways to accomplish this
+		This is getting difficult. Who'd have thought that designing what amounts to
+		a ui building ui more or less from scratch would take a lot of thought?
+		
+		We have a number of options to represent visual objects. They could be
+		independent actors, they could be nested so that the canvas can be asked for
+		the draw state of everything.
+		
+		So if we make shape schemata functions that take data and return shapes,
+		have specs for shapes, then we should be able to generate said functions
+		pretty trivially.
+		
+		Composition is a problem though. If you have a function that returns a line,
+		and then a compound schema which is a function that returns a compound
+		shape, you can't add another line to the compound schema since it's a
+		function. You rather need to look at what made the function and then add a
+		line to that and then make a new function. In otherwords we need a data
+		representation and generic instantiation.
 
+**** Considerations
+		 - Event bubbling
+			 This has always seemed to me like a sore spot of js and the dom, but we
+       do need someway to decide which of several overlapping objects gets a
+       message.
+
+		 - Extracting the draw state
+			 However we implement visual objects the state of the canvas has to be
+       directly accessible with minimal coordination.
+
+		 - Changing values over time
+			 Shapes are immutable. Transformation functions (like affine txs) return
+       new shapes.
+			 
+			 Visual objects have shapes, but they are much more complicated. If we
+       store shapes in the visual objects then we have a mutation problem: what
+       does it mean to grab a widget and drag it to resize a shape? does the
+       visual object contain a reference to a shape changing over time? That's
+       one way to do it, but then each object has to keep an undo history and
+       something global has to order them so that undo and redo operate sanely.
+			 
+			 We could alternately model the canvas as a single immutable composite
+       shape. Use an event sourcing model like Elm's to take Event -> Shape ->
+       Shape which would give us a nice functional feel and easy
+       undo(tree!). Visual objects then would not really be objects, but event
+       transformers that take a Shape -> DOMEvent -> Maybe Event.
+			 
+			 We can use re-frame's event handling logic to handle this. We can also
+       just keep a list of previous states for undo purposes. Undo granularity
+       is an eternal problem, but we can figure it out.
+
+		 - Time travel debugging
+			 This sounds like it would be useful, but I'm not sure it would
+       be. Certainly not until the end user starts to create interactive things.
+
+		 - Backtracking / Undo / Redo / Undotree
+			 I'm far from certain that undotree is a useful — read useful as can and
+       will be used — feature. I saw a really cool gui undotree style browser
+       history navigation widget in a paper once. That could conceivably bridge
+       the gap.
+			 
+			 In any case we want effectively unlimited undo/redo.
+			 
+		 - Collaborative editing
+			 It doesn't have to be multi-client, it could just be a bunch of fingers
+       on a single touch screen, either way it should play nice.
+
+			 So how would we handle multi-user simultaneous editing? We can't totally
+       order events, but if we can model shapes as a CRDT then we'd be on
+       comparatively easy avenue.
+
+		 - Instatiation
+			 This is a tricky one. We need two layers of representation for this. We
+       need data bound shapes, which without data can't be drawn (unless we fake
+       data, which might be useful for protoyping), and we need the concrete
+       shapes. A change in the data will generate a new canvas.
+
+			 If we bind a given piece of user data to a single compound shape, then
+       composition becomes simple (look at this data vis and that data vis side
+       by side? No problem). Similarly animations just become streams of shapes
+       with a framerate.
+			 
+			 So what's the best way to represent data bound shapes? Maybe something
+       like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
+			 
+			 So does this mean that we want shapes to be a subscription from
+       shapeconstructors / abstract shapes? That would give us the simplest
+       reactivity...
+			 
+			 Keep in mind that we want one unified representation to deal with shapes,
+       abstract shapes, and shape constructors. Abstract shapes depend on the
+       data, shape constructors depend on user input, and shapes are just data.
+
+** [2017-07-11 Tue 12:20]
+	 Interesting connection: we want to be able to create an object from one
+	 member of a list and then create a compound by iterating over the list and
+	 composing the results. Reminds me of excel. Wait and see if anything useful
+	 comes of that.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 
