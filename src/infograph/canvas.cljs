@@ -1,5 +1,7 @@
 (ns infograph.canvas
-  (:require [infograph.shapes :as shapes]
+  (:require [clojure.string :as string]
+            [infograph.shapes :as shapes]
+            [infograph.uuid :as uuid]
             [re-frame.core :as re-frame]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -124,25 +126,25 @@
       (unregister! [_ obj]
         (swap! event-map (clear-value obj))))))
 
-(defn handler [type mode ev]
+#_(defn handler [type mode ev]
   (binding [*mode* mode]
     (handle canvas-event-manager type ev)))
 
 (defn- event-manager
   [protocol dispatch-map]
-  (let [registees (atom [])
+  (let [registees (atom {})
         this (reify
                EventManager
-               (register! [_ obj]
+               (register! [_ [k obj]]
                  #_(assert (satisfies? protocol obj))
-                 (swap! registees conj obj))
-               (unregister! [_ obj]
+                 (swap! registees assoc k obj))
+               (unregister! [_ k]
                  ;; Unregistration will be a rare event, so presumably quick
                  ;; iteration is more important than efficient removal
-                 (swap! registees filterv #(not= % obj)))
+                 (swap! registees dissoc k))
                (handle [_ type ev]
                  (let [f (get dispatch-map type)]
-                   (doseq [obj @registees]
+                   (doseq [obj (vals @registees)]
                      ;; Without reflection I can't guarantee that the methods
                      ;; take two args. Or is there another way?
                      (f obj ev)))))]
@@ -183,12 +185,14 @@
 (defn line-constructor
   ([p] (line-constructor p p))
   ([p q]
-   (let [this
+   (let [q (atom q)
+         id (uuid/squuid)
+         this
          (reify
            Draw
            (draw [_ ctx]
              (let [[x1 y1] p
-                   [x2 y2] q]
+                   [x2 y2] @q]
                ;; REVIEW: I think I need to return this as data and write a
                ;; separate renderer. Use case: Drawing these lines might be more
                ;; obvious if you saw a greyed out rectangle with the line as
@@ -197,18 +201,17 @@
                (.lineTo ctx x2 y2)))
            
            Motion
-           (move [this loc]
-             (.log js/console "move")
-             (re-frame/dispatch [:remove-vo this])
-             (re-frame/dispatch [:add-vo (line-constructor p loc)]))
-           (end [this loc]
-             j
-             (re-frame/dispatch [:remove-vo this])
-             (re-frame/dispatch [:add-vo (line {:start p
-                                                :end q
-                                                :type :line})])))]
-     (register! motion this)
-     this)))
+           (start [_ _])
+           (move [_ loc]
+             (reset! q loc))
+           (end [_ loc]
+             (unregister! motion id)
+             (re-frame/dispatch [:remove-vo id])
+             (re-frame/dispatch [:add-vo [(uuid/squuid) (line {:start p
+                                                          :end loc
+                                                          :type :line})]])))]
+     (register! motion [id this])
+     [id this])))
 
 
 (def constructor
@@ -217,10 +220,32 @@
    (lazy-map
     [:mouse-down :touch-start]
     (fn [_ ev]
+      (.log js/console ev)
       (let [loc (click-location ev)]
-        (.log js/console *mode*)
         (cond
           (= *mode* :line) (re-frame/dispatch [:add-vo (line-constructor loc)])
           :else 3))))))
 
-(register! constructor (reify Motion (start [_ _]) (move [_ _]) (end [_ _])))
+(register! constructor [1 (reify Motion (start [_ _]) (move [_ _]) (end [_ _]))])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Attempt #2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmulti process-event (fn [ev] (.-type ev)))
+;; TODO: unify :mouse-down & "mousedown", etc.. Why was it a good idea to create
+;; a new taxonomy?
+
+(defn stringify-event-type [k]
+  (string/replace (name k) #"-" ""))
+
+(def event-processing
+  {[:mouse-down :touch-start :mouse-move :mouse-up :touch-move :touch-end]
+   click-location})
+
+(doseq [[ks f] event-processing]
+  (doseq [k ks]
+    (defmethod process-event (stringify-event-type k) [ev] (f ev))))
+
+(defn handler [ev]
+  (.log js/console (process-event ev)))

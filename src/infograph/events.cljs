@@ -24,13 +24,13 @@
 
 (re-frame/reg-event-db
  :remove-vo
- (fn [db [_ vo]]
-   (update db :canvas disj vo)))
+ (fn [db [_ k]]
+   (update db :canvas dissoc k)))
 
 (re-frame/reg-event-db
  :add-vo
- (fn [db [_ vo]]
-   (update db :canvas conj vo)))
+ (fn [db [_ [k vo]]]
+   (update db :canvas assoc k vo)))
 
 ;;;;; FX
  
@@ -77,4 +77,4 @@
 (re-frame/reg-sub
  :canvas
  (fn [db _]
-   (:canvas db)))
+   (vals (:canvas db))))

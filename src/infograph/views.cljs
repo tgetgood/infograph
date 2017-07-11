@@ -22,12 +22,11 @@
    :touch-end
    ;; Looks like we're going to have to deal with hover from scratch now as well
    ])
+;; TODO: Centralise all this dom event stuff...
 
-(defn canvas-event-handlers [mode]
-  (into {}
-        (map (fn [x]
-               [(ev->handler x) (partial canvas/handler x mode)])
-          events)))
+(def canvas-event-handlers 
+  (into {} (map (fn [t] [(ev->handler t) canvas/handler]) events)))
+
 
 (defn- manual-props
   "Why??"
@@ -52,7 +51,7 @@
                                ;; the app. What do we do if we suddenly want
                                ;; multiple canvases? What's a better way to do
                                ;; this?
-                               (assoc (canvas-event-handlers @mode)
+                               (assoc canvas-event-handlers
                                       :id "the-canvas")]))}))
 
 (defn canvas-panel [drawing]
