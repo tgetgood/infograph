@@ -5,33 +5,10 @@
             [re-frame.core :as re-frame]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Protocols
+;;; Drawing
+;; TODO: Use the specs to validate shapes. There's too much adhoc coordination
+;; as it stands.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defprotocol EventManager
-  "Event processor"
-  (handle [this type ev])
-  (register! [this o])
-  (unregister! [this o]))
-
-(defprotocol Shape
-  "Protocol that must be implemented by all shapes."
-  ;; Expose the inner structure in some format
-  (properties [this])
-  ;; Create a concrete visual object from the given data and this abstract
-  ;; visual object
-  (instantiate [this data]))
-
-(defprotocol Wheel
-  (wheel [this e]))
-
-(defprotocol Motion
-  (start [this loc])
-  (move [this loc])
-  (end [this loc]))
-
-(defprotocol IDroppable
-  (f [_]))
 
 (defmulti draw (fn [ctx vo] (:type vo)))
 
@@ -57,6 +34,12 @@
   (.moveTo ctx x1 y1)
   (.rect ctx x1 y1 (- x2 x1) (- y2 y1)))
 
+(defn draw! [ctx vo]
+  (.beginPath ctx)
+  (draw ctx vo)
+  (.stroke ctx)
+  (.closePath ctx))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Canvas Manipulation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,12 +62,6 @@
 
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
-
-(defn draw! [ctx vo]
-  (.beginPath ctx)
-  (draw ctx vo)
-  (.stroke ctx)
-  (.closePath ctx))
 
 (defn click-location [e]
   (let [c (canvas)]
