@@ -241,61 +241,80 @@
 	 let's worry about that later. Maybe specs aren't a good choice, for that
 	 reason.
 ** Computed Properties
-	 So how do we go about linking data to the properties of visual objects?
+*** Early Ideas
+		So how do we go about linking data to the properties of visual objects?
 
-	 Internally the visual object will be represented as a map of properties. We
-	 could set the values of those properties to reaction like functions. Or we
-	 could set them to atoms that would need to updated elsewhere (bad idea), or
-	 we could represent the shape itself as a stream with each instance being a
-	 concrete, renderable entity.
+		Internally the visual object will be represented as a map of properties. We
+		could set the values of those properties to reaction like functions. Or we
+		could set them to atoms that would need to updated elsewhere (bad idea), or
+		we could represent the shape itself as a stream with each instance being a
+		concrete, renderable entity.
 
-	 How do we want to compose these dynamic shapes? Should a composite picture
-	 update atomically, or should the subobjects update only when needed. The
-	 waste of rerendering on every frame would be huge, so let's not do that. I
-	 think we need to steal the lazy rendering model from somebody (reagent, om,
-	 react itself?). At least we don't need the virtual dom.
+		How do we want to compose these dynamic shapes? Should a composite picture
+		update atomically, or should the subobjects update only when needed. The
+		waste of rerendering on every frame would be huge, so let's not do that. I
+		think we need to steal the lazy rendering model from somebody (reagent, om,
+		react itself?). At least we don't need the virtual dom.
 
-	 So what if we have functions like
+		So what if we have functions like
 
-	 #+BEGIN_SRC clojure
+		#+BEGIN_SRC clojure
 		 (link-property {} :length length-from-data)
 
 		 (-> shape
 				 (link-property :length f)
 				 (link-property :x g)
 				 (link-prpoperty :y h))
-	 #+END_SRC
+		#+END_SRC
 
-	 That's not very nice.
+		That's not very nice.
 
-	 Values coming from a data set will have an implicit path, so we could do
-	 something more like:
+		Values coming from a data set will have an implicit path, so we could do
+		something more like:
 
-	 #+BEGIN_SRC clojure
+		#+BEGIN_SRC clojure
 		 {:type               :linked-shape
 			:base-shape         {:type  :line
 													 :style {:colour "#FF0000"}}
 			:dynamic-properties {:length {:path [:a ANY :l] :tx f}
 													 :x      {:path [:a ANY :x]}
 													 :y      {:path [...]}}}
-	 #+END_SRC
+		#+END_SRC
 
-	 But then why not represent the shape itself as
+		But then why not represent the shape itself as
 
-	 #+BEGIN_SRC clojure
+		#+BEGIN_SRC clojure
 		 {:length (->DynamicProp [:a ANY :l] :tx f)
 			:x 34
 			:y 75}
-	 #+END_SRC
+		#+END_SRC
 
-	 I don't like these spectre like ANYs lying around. Do I need a path query
-	 language or should I prefer a recursive design? What would a recursive design
-	 look like?
+		I don't like these spectre like ANYs lying around. Do I need a path query
+		language or should I prefer a recursive design? What would a recursive design
+		look like?
 
-	 Walk the input data tree and at each object find an appropriate parser and
-	 parse it, if a property contains an object recurse, if it contains an array
-	 of objects recurse (what if it contains an array of values?). Can this
-	 capture enough context to draw what the user wants?
+		Walk the input data tree and at each object find an appropriate parser and
+		parse it, if a property contains an object recurse, if it contains an array
+		of objects recurse (what if it contains an array of values?). Can this
+		capture enough context to draw what the user wants?
+*** Current Idea
+		So for the time being I've created a pair of types ValueSchema and
+		ShapeSchema that allow the contruction of shapes as values even though the
+		values aren't defined apriori. The new types plus built in types implement
+		an `Instantiable` protocol which, given data, does what you'd expect.
+
+		Down side: This assumes a tree structure to the incoming data. Given my
+		original use case of building a graphic from a json file of API, this is
+		fine, but real data is linked in complex ways and this approach is
+		fundamenttally limited.
+
+		The Schema types take a "query" which is at the present just a vector of
+		keys to be passed to `get-in`. This is the arboreal bottleneck. I don't see
+		why we couldn't replace the vector paths with datascript queries in
+		principle. Maybe I'm not as locked in as I first thought.
+
+		Either way getting something basic working is priority one, so let's not get
+		lost in the cave.
 *** Considerations
 		We pass in a data structure to a shape schema. That schema then has to apply
 		parts of the data structure to its own subschemata. So a schema needs to
@@ -304,6 +323,42 @@
 		bottom out kind of naturally?
 
 ** Graphic Design Model
+	 So we have two fundamentally different sources of data. We have domain data,
+	 that is the JSON, or whatever comes in that will ultimately generate the
+	 graphic. This is comparable to a compile time thing. The second kind of data
+	 is the user's interaction history. These determine the state of interactivly
+	 defined widgets such as shape constructors.
+
+	 Thus we have a calculus with two operators: instantiate and react — names may
+	 vary. instantiate takes shape schemata to shapes. react takes shape templates
+	 to shapes. The two operators are idempotent and commute. That's a nice simple
+	 algebra. There's probably a whole theory of things like that if only I knew
+	 the name.
+
+	 See simple category diagram in notebook. I don't want to copy it at the
+	 moment.
+
+	 Widgets, unlike shapes have a lifecycle. Constructors in particular have to
+	 remove themselves and add concrete shapes in their place. Really this amounts
+	 to reacting in the source data itself. A partial evaluation of the data
+	 template.
+
+	 This is the opposite of data linking, where concrete shapes need to be
+	 replaced with shape schemata.
+
+	 Generalisation and specialisation. Familiar theme?
+
+** User input
+	 Touches and mouse movements need to be resolved into paths whose state is
+	 tracked in the app.
+
+	 This is the only way I can see to resolve multiple simultaneous touches into
+	 separate drawings.
+
+	 Also if each path has a unique id then a shape constructor can be bound to
+	 the head of that named path and listen for that path ending to reify
+	 itself. I need a more fine grained vocabulary.
+
 ** Interactive Canvas
 *** Ramblings
 		So we don't have an event model on canvas. I knew that, but I've been putting
@@ -363,7 +418,7 @@
 		those things the user explicitely creates. Might it make sense to allow
 		agglomerates? Might it then make sense to have equivalences and dynamic
 		tansformations between equivalents? How would I do that?
-	
+
 		So what do we do about multiple event listeners and bubbling? I don't know
 		much about these things. I might be getting out of my depth...
 *** Details
@@ -390,7 +445,7 @@
 
 		N.B.: Run a test on this as soon as we can to make sure that scaling isn't
 		completely attrocious. We want this to be usable.
-		
+
 **** Events to be dealt with
 		 - wheel
 		 - click
@@ -419,7 +474,7 @@
 			- drag-end
 			- drop
 			- hover
-***** Visual object creation 
+***** Visual object creation
 			- mouse-down
 			- mouse-move
 			- mouse-up
@@ -430,20 +485,20 @@
 			Moving, resizing, other standard svg like stuff
 			- mouse-*
 			- touch-*
-***** 
+*****
 
 *** Ways to accomplish this
 		This is getting difficult. Who'd have thought that designing what amounts to
 		a ui building ui more or less from scratch would take a lot of thought?
-		
+
 		We have a number of options to represent visual objects. They could be
 		independent actors, they could be nested so that the canvas can be asked for
 		the draw state of everything.
-		
+
 		So if we make shape schemata functions that take data and return shapes,
 		have specs for shapes, then we should be able to generate said functions
 		pretty trivially.
-		
+
 		Composition is a problem though. If you have a function that returns a line,
 		and then a compound schema which is a function that returns a compound
 		shape, you can't add another line to the compound schema since it's a
@@ -454,75 +509,75 @@
 **** Considerations
 		 - Event bubbling
 			 This has always seemed to me like a sore spot of js and the dom, but we
-       do need someway to decide which of several overlapping objects gets a
-       message.
+			 do need someway to decide which of several overlapping objects gets a
+			 message.
 
 		 - Extracting the draw state
 			 However we implement visual objects the state of the canvas has to be
-       directly accessible with minimal coordination.
+			 directly accessible with minimal coordination.
 
 		 - Changing values over time
 			 Shapes are immutable. Transformation functions (like affine txs) return
-       new shapes.
-			 
+			 new shapes.
+
 			 Visual objects have shapes, but they are much more complicated. If we
-       store shapes in the visual objects then we have a mutation problem: what
-       does it mean to grab a widget and drag it to resize a shape? does the
-       visual object contain a reference to a shape changing over time? That's
-       one way to do it, but then each object has to keep an undo history and
-       something global has to order them so that undo and redo operate sanely.
-			 
+			 store shapes in the visual objects then we have a mutation problem: what
+			 does it mean to grab a widget and drag it to resize a shape? does the
+			 visual object contain a reference to a shape changing over time? That's
+			 one way to do it, but then each object has to keep an undo history and
+			 something global has to order them so that undo and redo operate sanely.
+
 			 We could alternately model the canvas as a single immutable composite
-       shape. Use an event sourcing model like Elm's to take Event -> Shape ->
-       Shape which would give us a nice functional feel and easy
-       undo(tree!). Visual objects then would not really be objects, but event
-       transformers that take a Shape -> DOMEvent -> Maybe Event.
-			 
+			 shape. Use an event sourcing model like Elm's to take Event -> Shape ->
+			 Shape which would give us a nice functional feel and easy
+			 undo(tree!). Visual objects then would not really be objects, but event
+			 transformers that take a Shape -> DOMEvent -> Maybe Event.
+
 			 We can use re-frame's event handling logic to handle this. We can also
-       just keep a list of previous states for undo purposes. Undo granularity
-       is an eternal problem, but we can figure it out.
+			 just keep a list of previous states for undo purposes. Undo granularity
+			 is an eternal problem, but we can figure it out.
 
 		 - Time travel debugging
 			 This sounds like it would be useful, but I'm not sure it would
-       be. Certainly not until the end user starts to create interactive things.
+			 be. Certainly not until the end user starts to create interactive things.
 
 		 - Backtracking / Undo / Redo / Undotree
 			 I'm far from certain that undotree is a useful — read useful as can and
-       will be used — feature. I saw a really cool gui undotree style browser
-       history navigation widget in a paper once. That could conceivably bridge
-       the gap.
-			 
+			 will be used — feature. I saw a really cool gui undotree style browser
+			 history navigation widget in a paper once. That could conceivably bridge
+			 the gap.
+
 			 In any case we want effectively unlimited undo/redo.
-			 
+
 		 - Collaborative editing
 			 It doesn't have to be multi-client, it could just be a bunch of fingers
-       on a single touch screen, either way it should play nice.
+			 on a single touch screen, either way it should play nice.
 
 			 So how would we handle multi-user simultaneous editing? We can't totally
-       order events, but if we can model shapes as a CRDT then we'd be on
-       comparatively easy avenue.
+			 order events, but if we can model shapes as a CRDT then we'd be on
+			 comparatively easy avenue.
 
 		 - Instatiation
 			 This is a tricky one. We need two layers of representation for this. We
-       need data bound shapes, which without data can't be drawn (unless we fake
-       data, which might be useful for protoyping), and we need the concrete
-       shapes. A change in the data will generate a new canvas.
+			 need data bound shapes, which without data can't be drawn (unless we fake
+			 data, which might be useful for protoyping), and we need the concrete
+			 shapes. A change in the data will generate a new canvas.
 
 			 If we bind a given piece of user data to a single compound shape, then
-       composition becomes simple (look at this data vis and that data vis side
-       by side? No problem). Similarly animations just become streams of shapes
-       with a framerate.
-			 
+			 composition becomes simple (look at this data vis and that data vis side
+			 by side? No problem). Similarly animations just become streams of shapes
+			 with a framerate.
+
 			 So what's the best way to represent data bound shapes? Maybe something
-       like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
-			 
+			 like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
+
 			 So does this mean that we want shapes to be a subscription from
-       shapeconstructors / abstract shapes? That would give us the simplest
-       reactivity...
-			 
+			 shapeconstructors / abstract shapes? That would give us the simplest
+			 reactivity...
+
 			 Keep in mind that we want one unified representation to deal with shapes,
-       abstract shapes, and shape constructors. Abstract shapes depend on the
-       data, shape constructors depend on user input, and shapes are just data.
+			 abstract shapes, and shape constructors. Abstract shapes depend on the
+			 data, shape constructors depend on user input, and shapes are just data.
 
 ** [2017-07-11 Tue 12:20]
 	 Interesting connection: we want to be able to create an object from one

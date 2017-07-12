@@ -1,8 +1,12 @@
 (ns infograph.events
   (:require [infograph.canvas :as canvas]
             [infograph.db :as db]
+            [infograph.events.dom :as dom-events]
             [infograph.shapes :as shapes]
             [re-frame.core :as re-frame]))
+
+(defn q [name]
+  (keyword :infograph.events name)) 
 
 ;;;;; Events
 
@@ -32,6 +36,22 @@
  (fn [db [_ [k vo]]]
    (update db :canvas assoc k vo)))
 
+(re-frame/reg-event-fx
+ ::resize-canvas
+ (fn [_ _]
+   {::resize-canvas! true}))
+
+(re-frame/reg-event-fx
+ ::redraw-canvas
+ (fn [{[_ d] :event}]
+   {::redraw-canvas! d}))
+
+(re-frame/reg-event-fx
+ ::dom-event
+ (fn [{[_ evt val] :event}]
+   (let [evs (dom-events/get-handlers evt)]
+     {:dispatch-n (map (fn [k] [k val]) evs)})))
+
 ;;;;; FX
  
 (re-frame/reg-fx
@@ -46,16 +66,6 @@
  ::resize-canvas!
  (fn [_]
    (canvas/set-canvas-size! (canvas/canvas))))
-
-(re-frame/reg-event-fx
- ::resize-canvas
- (fn [_ _]
-   {::resize-canvas! true}))
-
-(re-frame/reg-event-fx
- ::redraw-canvas
- (fn [{[_ d] :event :as a}]
-   {::redraw-canvas! d}))
 
 ;;;;; Subscriptions
 
@@ -75,6 +85,22 @@
    (:canvas-input-mode db)))
 
 (re-frame/reg-sub
- :canvas
+ :canvas-raw
  (fn [db _]
-   (vals (:canvas db))))
+   (:canvas db)))
+
+(re-frame/reg-sub
+ :input
+ (fn [db _]
+   (:input db)))
+
+(re-frame/reg-sub
+ :canvas
+ (fn [_ _]
+   [(re-frame/subscribe [:canvas-raw])
+    (re-frame/subscribe [:data])
+    (re-frame/subscribe [:input])])
+ (fn [[canvas data input]]
+   (-> canvas
+       (shapes/instantiate data)
+       (shapes/react input))))

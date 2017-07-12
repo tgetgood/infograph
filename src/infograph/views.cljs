@@ -1,48 +1,20 @@
 (ns infograph.views
-  (:require [infograph.canvas :as canvas]
-            [infograph.css :as css]
+  (:require [infograph.css :as css]
+            [infograph.events :as events]
+            [infograph.events.dom :as dom-events]
             [infograph.input :as input]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
 
-(defn event [name]
-  (keyword :infograph.events name))
-
-(defn ev->handler [ev]
-  (keyword (str "on-" (name ev))))
-
-(def events
-  [:wheel
-   :click
-   :mouse-down
-   :mouse-move
-   :mouse-up
-   :touch-start
-   :touch-move
-   :touch-end
-   ;; Looks like we're going to have to deal with hover from scratch now as well
-   ])
-;; TODO: Centralise all this dom event stuff...
-
-(def canvas-event-handlers 
-  (into {} (map (fn [t] [(ev->handler t) canvas/handler]) events)))
-
-
-(defn- manual-props
-  "Why??"
-  ;; HACK: reagent has a fn for this. Why isn't it working?
-  [this]
-  (-> this (aget "props") (aget "argv") second))
-
 (defn canvas-inner []
   (reagent/create-class
    {:component-did-mount  (fn [this]
-                            (re-frame/dispatch [(event :resize-canvas)])
-                            (let [drawing (manual-props this)]
-                              (re-frame/dispatch [(event :redraw-canvas) drawing])))
+                            (re-frame/dispatch [(events/q :resize-canvas)])
+                            (let [drawing (reagent/props this)]
+                              (re-frame/dispatch [(events/q :redraw-canvas) drawing])))
     :component-did-update (fn [this]
-                            (let [drawing (manual-props this)]
-                              (re-frame/dispatch [(event :redraw-canvas) drawing])))
+                            (let [drawing (reagent/props this)]
+                              (re-frame/dispatch [(events/q :redraw-canvas) drawing])))
     :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
                             (fn []
                               [:canvas
@@ -51,7 +23,7 @@
                                ;; the app. What do we do if we suddenly want
                                ;; multiple canvases? What's a better way to do
                                ;; this?
-                               (assoc canvas-event-handlers
+                               (assoc dom-events/canvas-event-handlers
                                       :id "the-canvas")]))}))
 
 (defn canvas-panel [drawing]
