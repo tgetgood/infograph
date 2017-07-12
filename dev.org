@@ -446,47 +446,6 @@
 		N.B.: Run a test on this as soon as we can to make sure that scaling isn't
 		completely attrocious. We want this to be usable.
 
-**** Events to be dealt with
-		 - wheel
-		 - click
-		 - mouse-down
-		 - mouse-move
-		 - mouse-up
-		 - click end
-		 - touch start
-		 - touch move
-		 - touch end
-		 - dragstart
-		 - drag
-		 - drop
-		 - dragend
-		 - hover
-		 - dblclick?
-		 - right-click?
-**** Action Types
-***** Pan and zoom on canvas
-			 - wheel
-			 - mouse-down
-			 - mouse-move
-			 - mouse-up
-			 - touch-*
-***** Drag data link into visual object
-			- drag-end
-			- drop
-			- hover
-***** Visual object creation
-			- mouse-down
-			- mouse-move
-			- mouse-up
-			- touch-start
-			- touch-move
-			- touch-end
-***** VO manipulation
-			Moving, resizing, other standard svg like stuff
-			- mouse-*
-			- touch-*
-*****
-
 *** Ways to accomplish this
 		This is getting difficult. Who'd have thought that designing what amounts to
 		a ui building ui more or less from scratch would take a lot of thought?
@@ -593,7 +552,7 @@
 
 	Two panels: code on the left and a drawing tool on the right. Don't start
 	with free drawing, it's too messy and people won't use it for a lot of
-	things. We can get really far with line, rectangle, circle and elipse.
+	things. We can get really far with line, rectangle, circle and ellipse.
 
 	Data will have a structure, so drag properties from your data (presumably the
 	objects) to the properties of the things you drew (lengths, colours, labels,
