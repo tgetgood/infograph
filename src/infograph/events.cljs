@@ -24,17 +24,7 @@
 (re-frame/reg-event-db
  :set-input-mode
  (fn [db [_ mode]]
-   (assoc db :canvas-input-mode mode)))
-
-(re-frame/reg-event-db
- :remove-vo
- (fn [db [_ k]]
-   (update db :canvas dissoc k)))
-
-(re-frame/reg-event-db
- :add-vo
- (fn [db [_ [k vo]]]
-   (update db :canvas assoc k vo)))
+   (assoc-in db [:canvas :input-mode] mode)))
 
 ;; TODO: Listen for window resizing events.
 (re-frame/reg-event-fx
@@ -71,11 +61,6 @@
 ;;;;; Subscriptions
 
 (re-frame/reg-sub
- :current-shape
- (fn [db _]
-   (:current-shape db)))
-
-(re-frame/reg-sub
  :data
  (fn [db _]
    (:data db)))
@@ -83,12 +68,12 @@
 (re-frame/reg-sub
  :input-mode
  (fn [db _]
-   (:canvas-input-mode db)))
+   (get-in db [:canvas :input-mode])))
 
 (re-frame/reg-sub
  :canvas-raw
  (fn [db _]
-   (:canvas db)))
+   (get-in db [:canvas :shape])))
 
 (re-frame/reg-sub
  :input

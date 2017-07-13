@@ -81,25 +81,25 @@
 (re-frame/reg-event-db
  ::stroke-start
  (fn [db [_ loc]]
-   (let [mode (:canvas-input-mode db)]
+   (let [mode (get-in db [:canvas :input-mode])]
      (if (= mode :grab)
        (do ;something
          )
        (let [constructor (get shapes/construction-map mode)]
          (-> db
              (assoc-in [:input :stroke 0] {:start loc})
-             (update :canvas shapes/assoc-shape (constructor loc))))))))
+             (update-in [:canvas :shape] shapes/assoc-shape (constructor loc))))))))
 
 (re-frame/reg-event-db
  ::stroke-end
  (fn [db [_ loc]]
-   (let [mode (:canvas-input-mode db)]
+   (let [mode (get-in db [:canvas :input-mode])]
      (if (= mode :grab)
        (do ; something
          )
        (-> db
            (assoc-in [:input :stroke 0 :end] loc)
-           (update :canvas shapes/react (:input db)))))))
+           (update-in [:canvas :shape] shapes/react (:input db)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Canvas
