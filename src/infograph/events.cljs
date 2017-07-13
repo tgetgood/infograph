@@ -27,10 +27,14 @@
    (assoc-in db [:canvas :input-mode] mode)))
 
 ;; TODO: Listen for window resizing events.
+;; FIXME: This is impure, but where's the right place to access the DOM?
 (re-frame/reg-event-fx
  ::resize-canvas
- (fn [_ _]
-   {::resize-canvas! true}))
+ (fn [{:keys [db]}]
+   (let [canvas (canvas/canvas)
+         [width height :as dim] (canvas/canvas-container-dimensions)]
+     {:db (update-in db [:canvas :window] assoc :width width :height height)
+      ::resize-canvas! [canvas dim]})))
 
 (re-frame/reg-event-fx
  ::redraw-canvas
@@ -55,8 +59,8 @@
 
 (re-frame/reg-fx
  ::resize-canvas!
- (fn [_]
-   (canvas/set-canvas-size! (canvas/canvas))))
+ (fn [[canvas dimensions]]
+   (canvas/set-canvas-size! canvas dimensions)))
 
 ;;;;; Subscriptions
 

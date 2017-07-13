@@ -49,15 +49,17 @@
    {[:mouse-down :mouse-move :mouse-up]   canvas/click-location
     [:touch-start :touch-move :touch-end] canvas/touch-location
     [:drop]                               drop-path
-    [:drag-over]                          canvas/drag-location}))
+    [:drag-over]                          canvas/drag-location
+    [:wheel]                              canvas/analyse-zoom}))
 
 (def event-map
   (keysmap
-   {[:mouse-down :touch-start]        [::stroke-start]
-    [:mouse-move :touch-move]         [::move]
-    [:mouse-up :touch-end :mouse-out] [::stroke-end]
-    [:drop]                           [::drop]
-    [:drag-over]                      [::drag]}))
+   {[:mouse-down :touch-start] [::stroke-start]
+    [:mouse-move :touch-move]  [::move]
+    [:mouse-up :touch-end]     [::stroke-end]
+    [:drop]                    [::drop]
+    [:drag-over]               [::drag]
+    [:wheel]                   [::zoom]}))
 
 ;; THOUGHTS: When an event comes in from the dom, should we look at the input mode and construct an internal event object? That would 
 
@@ -67,6 +69,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Events
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ ::zoom
+ (fn [db [_ [z-centre z]]]
+   (-> db
+       (update-in [:window :zoom] canvas/adjust-zoom z)
+       (update-in [:window :bottom-left] canvas/adjust-origin z-centre z))))
 
 (re-frame/reg-event-db
  ::drag
@@ -83,8 +92,7 @@
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
      (if (= mode :grab)
-       (do ;something
-         )
+       db
        (let [constructor (get shapes/construction-map mode)]
          (-> db
              (assoc-in [:input :stroke 0] {:start loc})
@@ -95,8 +103,7 @@
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
      (if (= mode :grab)
-       (do ; something
-         )
+       db
        (-> db
            (assoc-in [:input :stroke 0 :end] loc)
            (update-in [:canvas :shape] shapes/react (:input db)))))))
@@ -110,6 +117,7 @@
   (let [evtype (events-js->clj (.-type ev))
         processed (when (contains? event-processing evtype)
                     ((get event-processing evtype) ev))]
+    (.log js/console evtype)
     (re-frame/dispatch [:infograph.events/dom-event evtype processed])))
 
 (def canvas-event-handlers

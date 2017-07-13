@@ -10,5 +10,7 @@
    :canvas {:shape shapes/empty-composite
             :input-mode :grab
             :window {:zoom 1
-                     :bottom-left [0 0]}}})
+                     :bottom-left [0 0]
+                     :width 0
+                     :height 0}}})
 
