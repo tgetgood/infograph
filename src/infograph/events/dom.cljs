@@ -18,7 +18,9 @@
    :mouse-up    "mouseup"
    :touch-start "touchstart"
    :touch-move  "touchmove"
-   :touch-end   "touchend"})
+   :touch-end   "touchend"
+   :drag-over   "dragover"
+   :drop        "drop"})
 
 (def events-js->clj
   (into {}
@@ -39,16 +41,23 @@
                   (map (fn [k] [k v]) ks))
                 m)))
 
+(defn drop-path [ev]
+  )
+
 (def event-processing
   (keysmap
    {[:mouse-down :mouse-move :mouse-up]   canvas/click-location
-    [:touch-start :touch-move :touch-end] canvas/touch-location}))
+    [:touch-start :touch-move :touch-end] canvas/touch-location
+    [:drop]                               drop-path
+    [:drag-over]                          canvas/drag-location}))
 
 (def event-map
   (keysmap
    {[:mouse-down :touch-start] [::stroke-start]
-    [:mouse-move :touch-move] [::move]
-    [:mouse-up :touch-end] [::stroke-end]}))
+    [:mouse-move :touch-move]  [::move]
+    [:mouse-up :touch-end]     [::stroke-end]
+    [:drop]                    [::drop]
+    [:drag-over]               [::drag]}))
 
 (defn get-handlers [evt]
   (event-map evt))
@@ -56,6 +65,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Events
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ ::drag
+ (fn [db [_ loc]]
+   (assoc-in db [:input :drag-position] loc)))
 
 (re-frame/reg-event-db
  ::move
@@ -82,7 +96,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- handler [ev]
-  (.stopPropagation ev)
   (.preventDefault ev)
   (let [evtype (events-js->clj (.-type ev))
         processed (when (contains? event-processing evtype)

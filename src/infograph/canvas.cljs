@@ -1,8 +1,4 @@
-(ns infograph.canvas
-  (:require [clojure.string :as string]
-            [infograph.shapes :as shapes]
-            [infograph.uuid :as uuid]
-            [re-frame.core :as re-frame]))
+(ns infograph.canvas)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Drawing
@@ -62,6 +58,9 @@
 
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
+
+(defn drag-location [e]
+  [(.-pageX e) (.-pageY e)])
 
 (defn click-location [e]
   (let [c (canvas)]

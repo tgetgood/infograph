@@ -156,14 +156,14 @@
    :rectangle rectangle-constructor
    :circle circle-constructor})
 
-(def empty-composite
-  {:type :composite
-   :shapes #{}})
-
 (defn line [p q]
   {:type :line
    :p p
    :q q})
+
+(def empty-composite
+  {:type :composite
+   :shapes #{}})
 
 ;; TODO: Types
 (defn assoc-shape [c s]

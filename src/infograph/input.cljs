@@ -17,6 +17,15 @@
 (def nice-vec
   (into [] (take 4 (repeat nice-map))))
 
+(defn property-window []
+  (let [drag-position (re-frame/subscribe [:drag-position])]
+    (fn []
+      (let [[x y] @drag-position]
+        [:div {:style {:position "absolute"
+                       :top y
+                       :left x}}
+         "Test-dropper"]))))
+
 ;; colour stolen from klipse
 ;;
 ;; brackets #997
@@ -30,11 +39,14 @@
   ;; and I keep tripping on that.
   (render [this path] "Produce hiccup from renderable data."))
 
+(defn drag-start [p ev]
+  (.setData (.-dataTransfer ev) "path" p))
+
 (defn string-component
   [x p]
   (fn []
     [:span {:style {:color "#a11"}
-            :on-touch-move #(do (.preventDefault %))
+            :on-touch-move #(do (.preventDefault n%))
             :draggable true}
      x]))
 
@@ -45,6 +57,7 @@
       [:div 
        [:span {:style {:color "#164"}
                :draggable true
+               :on-drag-start (partial drag-start p)
                :on-click #(swap! open? not)}
         (str x)]
        (when @open?
@@ -85,7 +98,7 @@
    [render v (conj p k)]])
 
 (defn map-component
-  [x p]
+    [x p]
   [:span
    (map (fn [[k v :as x]]
           ^{:key k} [map-entry-component x p])
@@ -117,4 +130,6 @@
 (defn wired-data []
   (let [data (re-frame/subscribe [:data])]
     (fn []
-      [data-panel @data])))
+      [:div
+       [property-window]
+       [data-panel @data]])))

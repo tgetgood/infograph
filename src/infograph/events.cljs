@@ -95,6 +95,11 @@
    (:input db)))
 
 (re-frame/reg-sub
+ :drag-position
+ (fn [db _]
+   (get-in db [:input :drag-position])))
+
+(re-frame/reg-sub
  :canvas
  (fn [_ _]
    [(re-frame/subscribe [:canvas-raw])
