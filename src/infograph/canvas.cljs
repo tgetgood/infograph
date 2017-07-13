@@ -41,20 +41,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn canvas []
-  ;;FIXME: This won't do very shortly
   (.getElementById js/document "the-canvas"))
 
-(defn get-ctx []
-  (when-let [canvas (canvas)]
-    (.getContext canvas "2d")))
+(defn canvas-container []
+  (.getElementById js/document "canvas-container"))
 
-;; HACK: There must be a more reasonable way to compute these.
-(defn width [] (quot (.-innerWidth js/window) 2))
-(defn height [] (.-innerHeight js/window))
+(defn get-ctx []
+  (when-let [c (canvas)]
+    (.getContext c "2d")))
+
+(defn width [] (.-clientWidth (canvas-container)))
+(defn height [] (.-clientHeight (canvas-container)))
 
 (defn set-canvas-size! [canvas]
-  (set! (.-width canvas) (- (width) 10))
-  (set! (.-height canvas) (- (height) 10)))
+  (set! (.-width canvas) (width))
+  (set! (.-height canvas) (height)))
 
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
@@ -70,3 +71,8 @@
 (defn touch-location [e]
   (when-let [t (aget (.-touches e) 0)]
     (click-location t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Cartesian Plane
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+

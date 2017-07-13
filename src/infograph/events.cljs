@@ -36,6 +36,7 @@
  (fn [db [_ [k vo]]]
    (update db :canvas assoc k vo)))
 
+;; TODO: Listen for window resizing events.
 (re-frame/reg-event-fx
  ::resize-canvas
  (fn [_ _]

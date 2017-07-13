@@ -39,11 +39,13 @@
            1
            (quot 12 n)))))
 
-(defn columnize [n c]
-  [:div {:class (calculate-width n c)} c])
+(defn columnize [opts n c]
+  [:div (merge opts {:class (calculate-width n c)}) c])
 
-(defn row [& args]
-  (vapply :div.row (map (partial columnize (count args)) args)))
+(defn row [opts & args]
+  (if (map? opts)
+    (vapply :div.row opts (map (partial columnize opts (count args)) args))
+    (apply row {} opts args)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Widgets

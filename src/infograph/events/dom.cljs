@@ -53,11 +53,13 @@
 
 (def event-map
   (keysmap
-   {[:mouse-down :touch-start] [::stroke-start]
-    [:mouse-move :touch-move]  [::move]
-    [:mouse-up :touch-end]     [::stroke-end]
-    [:drop]                    [::drop]
-    [:drag-over]               [::drag]}))
+   {[:mouse-down :touch-start]        [::stroke-start]
+    [:mouse-move :touch-move]         [::move]
+    [:mouse-up :touch-end :mouse-out] [::stroke-end]
+    [:drop]                           [::drop]
+    [:drag-over]                      [::drag]}))
+
+;; THOUGHTS: When an event comes in from the dom, should we look at the input mode and construct an internal event object? That would 
 
 (defn get-handlers [evt]
   (event-map evt))
@@ -79,17 +81,25 @@
 (re-frame/reg-event-db
  ::stroke-start
  (fn [db [_ loc]]
-   (let [constructor (get shapes/construction-map (:canvas-input-mode db))]
-     (-> db
-         (assoc-in [:input :stroke 0] {:start loc})
-         (update :canvas shapes/assoc-shape (constructor loc))))))
+   (let [mode (:canvas-input-mode db)]
+     (if (= mode :grab)
+       (do ;something
+         )
+       (let [constructor (get shapes/construction-map mode)]
+         (-> db
+             (assoc-in [:input :stroke 0] {:start loc})
+             (update :canvas shapes/assoc-shape (constructor loc))))))))
 
 (re-frame/reg-event-db
  ::stroke-end
  (fn [db [_ loc]]
-   (-> db
-       (assoc-in [:input :stroke 0 :end] loc)
-       (update :canvas shapes/react (:input db)))))
+   (let [mode (:canvas-input-mode db)]
+     (if (= mode :grab)
+       (do ; something
+         )
+       (-> db
+           (assoc-in [:input :stroke 0 :end] loc)
+           (update :canvas shapes/react (:input db)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Canvas
