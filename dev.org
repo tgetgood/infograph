@@ -543,6 +543,35 @@
 	 member of a list and then create a compound by iterating over the list and
 	 composing the results. Reminds me of excel. Wait and see if anything useful
 	 comes of that.
+** [2017-07-17 Mon 11:23]
+	 Conceptually the app would be a lot simpler if we didn't store the
+	 canvas-wrapper at all, but instead passed the dom node in and created a new
+	 one each time we want to interact with it. After all it is supposed to be
+	 completely stateless. In principle that would also let us mix and match this
+	 stateless canvas API wrapper with traditional uses of canvas.
+
+	 Idea: Explictely define a default style (which is implicitely defined by the
+	 canvas init state and probably made explicit in an RFC somewhere) and merge
+	 in the style map when drawing. Then restore the default style when
+	 finished. This will make my code robust against other people's manipulations
+	 and at worst will revert someone else's style to the default. Better than
+	 turning everything red, not great, but what more can I do? Well I could query
+	 the context for all variables, store and restore them. Is that worth it?
+
+	 I guess the big question is do I want to make this play nice with existing
+	 canvas code? That seems like a laudable goal, but more or less irrelevant for
+	 my purposes at the moment.
+** [2017-07-17 Mon 12:05]
+	 Currently working on wrapping the canvas API so that I can treat the canvas
+	 element as a window into ℜ². At the same time the API needs to be stateless
+	 because I don't want all the global state problems of processing/canvas
+	 following me around.
+
+	 It's becoming obvious how tightly I've woven a lot of the drawing and event
+	 logic together. It's going to take a fair bit of work to tease everything
+	 apart, but that's a good thing. I'm currently getting a bit lost in my own
+	 code and there barely is any! That won't do.
+
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 

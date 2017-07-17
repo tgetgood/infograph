@@ -28,6 +28,7 @@
 (defprotocol Instantiable
   (instantiate [this data]))
 
+;; REVIEW: Types or Records?
 (deftype ValueSchema [query]
   Object
   (toString [_]

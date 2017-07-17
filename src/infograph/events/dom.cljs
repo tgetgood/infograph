@@ -41,7 +41,7 @@
                   (map (fn [k] [k v]) ks))
                 m)))
 
-(defn drop-path [ev]
+(defn drop-path [c ev]
   )
 
 (def event-processing
@@ -61,7 +61,8 @@
     [:drag-over]               [::drag]
     [:wheel]                   [::zoom]}))
 
-;; THOUGHTS: When an event comes in from the dom, should we look at the input mode and construct an internal event object? That would 
+;; THOUGHTS: When an event comes in from the dom, should we look at the input
+;; mode and construct an internal event object? That would
 
 (defn get-handlers [evt]
   (event-map evt))
@@ -92,6 +93,7 @@
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
      (if (= mode :grab)
+       ;; FIXME: ugly
        db
        (let [constructor (get shapes/construction-map mode)]
          (-> db
@@ -117,8 +119,9 @@
   (let [evtype (events-js->clj (.-type ev))
         processed (when (contains? event-processing evtype)
                     ((get event-processing evtype) ev))]
-    (.log js/console evtype)
     (re-frame/dispatch [:infograph.events/dom-event evtype processed])))
 
 (def canvas-event-handlers
-  (into {} (map (fn [t] [(ev->handler t) handler]) (keys events-clj->js))))
+  (into {}
+        (map (fn [t] [(ev->handler t) handler])
+          (keys events-clj->js))))

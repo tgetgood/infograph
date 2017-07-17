@@ -9,22 +9,20 @@
 (defn canvas-inner []
   (reagent/create-class
    {:component-did-mount  (fn [this]
-                            (re-frame/dispatch [(events/q :resize-canvas)])
-                            (let [drawing (reagent/props this)]
+                            (let [drawing (reagent/props this)
+                                  elem (reagent/dom-node this)]
                               (re-frame/dispatch
-                               [(events/q :redraw-canvas) drawing])))
+                               [(events/q :resize-canvas) elem])
+                              (re-frame/dispatch
+                               [(events/q :redraw-canvas) elem drawing])))
     :component-did-update (fn [this]
-                            (let [drawing (reagent/props this)]
+                            (let [drawing (reagent/props this)
+                                  elem (reagent/dom-node this)]
                               (re-frame/dispatch
-                               [(events/q :redraw-canvas) drawing])))
+                               [(events/q :redraw-canvas) elem drawing])))
     :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
                             (fn []
                               [:canvas
-                               ;; REVIEW: I don't like the globalness of using
-                               ;; the element ID to access the canvas throughout
-                               ;; the app. What do we do if we suddenly want
-                               ;; multiple canvases? What's a better way to do
-                               ;; this? Does it matter in this case?
                                (assoc dom-events/canvas-event-handlers
                                       :id "the-canvas")]))}))
 

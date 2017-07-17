@@ -30,16 +30,16 @@
 ;; FIXME: This is impure, but where's the right place to access the DOM?
 (re-frame/reg-event-fx
  ::resize-canvas
- (fn [{:keys [db]}]
-   (let [canvas (canvas/canvas)
-         [width height :as dim] (canvas/canvas-container-dimensions)]
+ (fn [{db :db [_ canvas] :event}]
+   (let [[width height :as dim] (canvas/canvas-container-dimensions)]
      {:db (update-in db [:canvas :window] assoc :width width :height height)
       ::resize-canvas! [canvas dim]})))
 
 (re-frame/reg-event-fx
  ::redraw-canvas
- (fn [{[_ d] :event}]
-   {::redraw-canvas! d}))
+ (fn [{[_ elem d] :event}]
+   (let [window (-> elem canvas/context (canvas/Window. {}))]
+     {::redraw-canvas! [window d]})))
 
 (re-frame/reg-event-fx
  ::dom-event
@@ -51,11 +51,10 @@
  
 (re-frame/reg-fx
  ::redraw-canvas!
- (fn [drawing]
+ (fn [[window drawing]]
    (when drawing
-     (when-let [ctx (canvas/get-ctx)]
-       (canvas/clear! ctx)
-       (canvas/draw! ctx drawing)))))
+     (canvas/clear! window)
+     (canvas/draw! window drawing))))
 
 (re-frame/reg-fx
  ::resize-canvas!
