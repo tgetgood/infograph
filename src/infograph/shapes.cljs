@@ -142,8 +142,8 @@
 (defn norm
   [[x1 y1] [x2 y2]]
   (let [x (- x2 x1)
-        t (- y2 y1)]
-    (js/Math.sqrt (* x x) (* y y))))
+        y (- y2 y1)]
+    (js/Math.sqrt (+ (* x x) (* y y)))))
 
 (defn circle-constructor
   [c]
