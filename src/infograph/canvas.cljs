@@ -82,11 +82,27 @@
   non-immediate mode graphics."
   (clear! [this]))
 
+(defprotocol ViewFrame
+  (refresh [this]
+    "Clear and reset the window for a new drawing.")
+  #_(visible? [this shape-data]
+      "Returns true if this shape is in the window and at least a pixel big.")
+  (render [this shape-data]
+    "Returns a renderable representation of shape in this window."))
+
 (defn on-screen?
   "Returns true if the point [x y] is in the given window."
   [[x y] {[ox oy] :bottom-left  :keys [width height zoom]}]
   (and (< ox x (+ ox (* zoom width)))
        (< oy y (+ oy (* zoom height)))))
+
+(defn visible?
+  "Returns true if a shape is large enough inthe window to be worth rendering."
+  ;;TODO: How do we decide? Right now if it's smaller than a pixel then we
+  ;;render it as a single pixel,
+  [& args]
+  ;; FIXME: stub
+  true)
 
 (defn pixels
   "Takes coordinates in the cartesian plane, and a window on the plane and
@@ -108,6 +124,10 @@
 (declare draw)
 
 (deftype Window [ctx window]
+  ViewFrame
+  (refresh [this]
+    (clear ctx))
+  
   Drawable
   (draw! [this shape]
     (draw this shape))
@@ -120,6 +140,8 @@
 ;;;;; Drawing
 ;; TODO: Use the specs to validate shapes. There's too much adhoc coordination
 ;; as it stands.
+;;
+;; This should very likely be pushed up into types for the individual shapes.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti draw (fn [window vo]  (:type vo)))

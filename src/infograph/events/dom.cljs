@@ -98,7 +98,7 @@
        (let [constructor (get shapes/construction-map mode)]
          (-> db
              (assoc-in [:input :stroke 0] {:start loc})
-             (update-in [:canvas :shape] shapes/assoc-shape (constructor loc))))))))
+             (update-in [:canvas :shape] conj (constructor loc))))))))
 
 (re-frame/reg-event-db
  ::stroke-end
@@ -108,7 +108,7 @@
        db
        (-> db
            (assoc-in [:input :stroke 0 :end] loc)
-           (update-in [:canvas :shape] shapes/react (:input db)))))))
+           (update-in [:canvas :shape] shapes/instantiate db))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Canvas

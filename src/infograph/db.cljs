@@ -7,7 +7,7 @@
   {:data input/nice-map
    :input {:strokes {:start nil :current nil :end nil}
            :drag-position [0 0]}
-   :canvas {:shape shapes/empty-composite
+   :canvas {:shape (shapes/empty-composite)
             :input-mode :grab
             :window {:zoom 1
                      :bottom-left [0 0]

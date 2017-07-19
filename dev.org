@@ -572,6 +572,29 @@
 	 apart, but that's a good thing. I'm currently getting a bit lost in my own
 	 code and there barely is any! That won't do.
 
+** [2017-07-18 Tue 12:11]
+	 As it stands I have the window being drawable. I think that's a
+	 mistake. Instead shapes should draw themselves to the window. But they need
+	 to ask the window first whether they can be drawn and have the window
+	 transform the shape into window pixels.
+	 
+	 So we need something like a RealShape which a window transforms into a
+	 PixelShape, which implements Drawable.
+	 
+	 So the redraw-canvas event side effect would need to take the DOM element,
+	 the window state, and the R² state, and pipe it all together to create a
+	 PixelShape which then gets drawn.
+	 
+	 It's not quite that simple because the pixel shape creation has to be
+	 recursive and lazy, but it shouldn't be that complicated. Compound
+	 PixelShapes would have RealShapes as sub pieces and would go through the
+	 window and be converted into PixelShapes that can then be drawn.
+** [2017-07-18 Tue 12:29]
+	 Or is this all wrong and the shapes should take a window and decide for
+	 themselves whether they're in it? After all the window can't see forward to
+	 decide on all possible shapes.
+	 
+	 Only problem there is what clears the frame and draws the grid/axes?
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 

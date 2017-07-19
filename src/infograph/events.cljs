@@ -84,6 +84,14 @@
    (:input db)))
 
 (re-frame/reg-sub
+ :inst-data
+ (fn [_ _]
+   [(re-frame/subscribe [:data])
+    (re-frame/subscribe [:input])])
+ (fn [[data input]]
+   {:data data :input input}))
+
+(re-frame/reg-sub
  :drag-position
  (fn [db _]
    (get-in db [:input :drag-position])))
@@ -92,9 +100,6 @@
  :canvas
  (fn [_ _]
    [(re-frame/subscribe [:canvas-raw])
-    (re-frame/subscribe [:data])
-    (re-frame/subscribe [:input])])
- (fn [[canvas data input]]
-   (-> canvas
-       (shapes/instantiate data)
-       (shapes/react input))))
+    (re-frame/subscribe [:inst-data])])
+ (fn [[canvas data]]
+   (shapes/instantiate canvas data)))
