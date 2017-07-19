@@ -28,7 +28,7 @@
 
 (defprotocol Instantiable
   "Instantiables are computations that know how to resolve themselves given data
-  that doesn't exist yet. Basically they're threadbare lenses."
+  that doesn't exist yet. Like lenses, sort of."
   (instantiate [this data]))
 
 (extend-protocol Instantiable
