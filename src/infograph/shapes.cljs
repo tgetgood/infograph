@@ -1,185 +1,72 @@
 (ns infograph.shapes
-  (:require [infograph.uuid :as uuid]))
+  (:require [infograph.canvas :as canvas]
+            [infograph.shapes.constructors :as constructors]
+            [infograph.shapes.impl :as impl]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Extension Helpers
+;;;;; Normalisation
 ;;;;;
-;;;;; It would be a lot nicer if we had clojure's extend macro.
+;;;;; This is a bit of a magic crux of the problem. How do we specify new ways
+;;;;; of representing a line? How do we allow analogy and ambiguity in
+;;;;; representations?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn seq-recur
-  "Apply (apply f x args) to each x in this."
-  [f this & args]
-  (into (empty this)
-        (map #(apply f % args)) this))
-
-(defn map-recur 
-  "Push f down into vals of this."
-  [f this & args]
-  (into {}
-        (map (fn [[k v]]
-               [k (apply f v args)])
-          this)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Schemata Types
+;;;;; Constraints
+;;;;;
+;;;;; How do we enforce parallelograms, squares, etc.?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defprotocol Instantiable
-  (instantiate [this data]))
-
-;; REVIEW: Types or Records?
-(deftype ValueSchema [query]
-  Object
-  (toString [_]
-    (str query "-->")))
-
-(deftype ShapeSchema [query shape]
-  Object
-  (toString [_]
-    (str query "-->" shape)))
-
-(extend-protocol Instantiable
-  default
-  (instantiate [this _] this)
-
-  cljs.core/PersistentArrayMap
-  (instantiate [this data]
-    (map-recur instantiate this data))
-
-  cljs.core/PersistentHashMap
-  (instantiate [this data]
-    (map-recur instantiate this data))
-
-  cljs.core/List
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentVector
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentHashSet
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentTreeSet
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  ;; TODO: Other collections. LazySeqs might be fun, but then again I don't need
-  ;; lazyness in things that have to be rendered every frame so why waste time?
-
-  ValueSchema
-  (instantiate [this data]
-    (get-in data (.-query this)))
-
-  ShapeSchema
-  (instantiate [this data]
-    (instantiate (.-shape this) (get-in data (.-query this)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Reactive Types
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defprotocol Reactive
-  (react [this input]))
-
-(deftype ReactiveValue [query])
-(deftype ReactiveComputation [query formula])
-
-(extend-protocol Reactive
-  default
-  (react [this _] this)
-
-  cljs.core/PersistentArrayMap
-  (react [this input]
-    (map-recur react this input))
-
-  cljs.core/PersistentHashMap
-  (react [this input]
-    (map-recur react this input))
-
-  cljs.core/List
-  (react [this input]
-    (seq-recur react this input))
-
-  cljs.core/PersistentVector
-  (react [this input]
-    (seq-recur react this input))
-
-  cljs.core/PersistentHashSet
-  (react [this input]
-    (seq-recur react this input))
-
-  cljs.core/PersistentTreeSet
-  (react [this input]
-    (seq-recur react this input))
-    
-  ReactiveValue
-  (react [this input]
-    (get-in input (.-query this)))
-
-  ReactiveComputation
-  (react [this input]
-    ((.-formula this) (get-in input (.-query this)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Shapes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn line-constructor
-  [p]
-  {:type :line
-   :p p
-   :q (ReactiveValue. [:strokes 0 :current])})
+;; Needs to be a type because I want custom conj behaviour.
+(deftype Composite [shapes]
+  cljs.core/ISet
+  (^clj -disjoin [_ o]
+   (Composite. (disj shapes o)))
 
-(defn rectangle-constructor
-  [p]
-  {:type :rectangle
-   :p p
-   :q (ReactiveValue. [:strokes 0 :current])})
+  cljs.core/ICollection
+  (^clj -conj [_ o]
+   (Composite. (conj shapes o)))
+  
+  ;; Need to implement ISeqable otherwise the REPL errors out trying to print
+  ;; this guy.
+  ISeqable
+  (^clj-or-nil -seq [_]
+   (seq {:shapes shapes}))
 
-(defn norm
-  [[x1 y1] [x2 y2]]
-  (let [x (- x2 x1)
-        y (- y2 y1)]
-    (js/Math.sqrt (+ (* x x) (* y y)))))
+  Object
+  (toString [_]
+    (str "infograph.shapes.Composite - "{:shapes shapes}))
 
-(defn circle-constructor
-  [c]
-  {:type :circle
-   :p c
-   :r (ReactiveComputation. [:strokes 0 :current] #(norm c %))})
+  canvas/Drawable
+  (canvas/draw! [this window]
+    (doseq [shape shapes]
+      (canvas/draw! shape window)))
 
-(def construction-map
-  {:line line-constructor
-   :rectangle rectangle-constructor
-   :circle circle-constructor})
+  impl/Instantiable
+  (impl/instantiate [_ data]
+    (Composite. (impl/instantiate shapes data))))
 
-(defn line [p q]
-  {:type :line
-   :p p
-   :q q})
+(defn empty-composite []
+  (Composite. #{} :composite))
 
-(def empty-composite
-  {:type :composite
-   :shapes #{}})
-
-;; TODO: Types
-(defn assoc-shape [c s]
-  (update c :shapes conj s))
-
-(defn dissoc-shape [c s]
-  (update c :shapes disj s))
+;;;;; Dev cruft
 
 (def test-shape
   {:start [0 0]
    :end [500 200]
    :type :line})
 
-(def example-line-schema
-  {:type :line
-   :p (ShapeSchema. [0] {:x (ValueSchema. [:x])
-                        :y (ValueSchema. [:y])})
-   :q [100 5]})
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; External API to Shapes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def construction-map
+  {:line constructors/line-constructor
+   :rectangle constructors/rectangle-constructor
+   :circle constructors/circle-constructor})
+
+(def instantiate impl/instantiate)
