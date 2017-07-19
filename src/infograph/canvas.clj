@@ -14,10 +14,9 @@
   style, executes body, then restores global draw state as if this never
   happened.
   Very impure function that lets the rest of the program be a big more pure."
-  ;; TODO: Make it do what it promises.
-  ;; This may not need to be a macro.
   [ctx style & body]
-  `(do
-     ;; noop
-     ~@body))
+  `(let [old# (save-style ~ctx)]
+     (set-style! ~ctx ~style)
+     ~@body
+     (set-style! ~ctx old#)))
 

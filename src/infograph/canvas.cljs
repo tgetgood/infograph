@@ -24,9 +24,10 @@
 
 (defn click-location [e]
   ;;HACK: We really need to pass in the canvas...
-  (let [c (js/document.getElementById "the-canvas")]
+  (let [c (js/document.getElementById "the-canvas")
+        h (.-clientHeight c)]
     [(- (.-pageX e) (.-offsetLeft c))
-     (- (.-pageY e) (.-offsetTop c))]))
+     (- h (- (.-pageY e) (.-offsetTop c)))]))
 
 (defn touch-location [e]
   (when-let [t (aget (.-touches e) 0)]
@@ -38,6 +39,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Cartesian Plane
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; FIXME: little more than a stub.
+(defn- save-style [ctx]
+  {:stroke-style (.-strokeStyle ctx)})
+
+(defn- set-style! [ctx style]
+  (set! (.-strokeStyle ctx) (:stroke-style style)))
 
 ;;;;; Canvas
 
@@ -55,10 +63,11 @@
           height (.-clientHeight elem)]
       (.clearRect ctx 0 0 width height)))
   (line [_ style [x1 y1] [x2 y2]]
-    (with-style ctx style
-      (with-stroke ctx
-        (.moveTo ctx x1 y1)
-        (.lineTo ctx x2 y2))))
+    (let [h (.-clientHeight elem)]
+      (with-style ctx style
+        (with-stroke ctx
+          (.moveTo ctx x1 (- h y1))
+          (.lineTo ctx x2 (- h y2))))))
   (circle [_ style [x y] r]
     (with-style ctx style
       (with-stroke ctx
@@ -74,27 +83,18 @@
 (defprotocol Drawable
   "High level interface to the canvas window. Main app should only ever interact
   with it at this level."
-  (draw! [this content]
-    "Clear the element and draw content in window."))
-
-(defprotocol Erasable
-  "Only top level canvas elements should be erasable, lest we start to promote
-  non-immediate mode graphics."
-  (clear! [this]))
+  (draw! [this window] "Draw this in the given window")
+  (draw? [this window] "Is this visible in the given window?"))
 
 (defprotocol ViewFrame
   (refresh [this]
-    "Clear and reset the window for a new drawing.")
-  #_(visible? [this shape-data]
-      "Returns true if this shape is in the window and at least a pixel big.")
-  (render [this shape-data]
-    "Returns a renderable representation of shape in this window."))
+    "Clear and reset the window for a new drawing."))
 
 (defn on-screen?
   "Returns true if the point [x y] is in the given window."
   [[x y] {[ox oy] :bottom-left  :keys [width height zoom]}]
-  (and (< ox x (+ ox (* zoom width)))
-       (< oy y (+ oy (* zoom height)))))
+  (and (<= ox x (+ ox (* zoom width)))
+       (<= oy y (+ oy (* zoom height)))))
 
 (defn visible?
   "Returns true if a shape is large enough inthe window to be worth rendering."
@@ -109,7 +109,7 @@
   returns the appropriate pixel coordinates."
   [[x y] {[ox oy] :bottom-left :keys [zoom]}]
   ;; Might have flipped the ratio
-  [(/ (- x ox) zoom) (/ (fkahf\ - y oy) zoom)])
+  [(/ (- x ox) zoom) (/ (- y oy) zoom)])
 
 (defn adjust-origin
   "Given an origin, a centre of zoom and a zoom scale, return the new
@@ -119,22 +119,23 @@
 
 (defn adjust-zoom [z delta]
   ;; REVIEW: This may not be ideal...
+  (.log js/console delta)
   (+ z delta))
 
-(declare draw)
+(def axis-style
+  {:stroke-style "rgba(255, 0, 0, 0.2)"})
 
-(deftype Window [ctx window]
+(defrecord Window [ctx window content]
   ViewFrame
   (refresh [this]
-    (clear ctx))
-  
-  Drawable
-  (draw! [this shape]
-    (draw this shape))
-  
-  Erasable
-  (clear! [_]
-    (clear ctx)))
+    (clear ctx)
+    (let [{[x y] :bottom-left z :zoom w :width h :height} window]
+      (line ctx {} [0 0] [w h])
+      (when (on-screen? [0 y] window)
+        (line ctx axis-style (pixels [0 y] window) (pixels [0 (+ y h)] window)))
+      (when (on-screen? [x 0] window)
+        (line ctx axis-style (pixels [x 0] window) (pixels [(+ x w) 0] window))))
+    (draw! content this)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Drawing
@@ -165,4 +166,3 @@
   [ctx {[x1 y1] :p [x2 y2] :q}]
   (.moveTo ctx x1 y1)
   (.rect ctx x1 y1 (- x2 x1) (- y2 y1)))
-

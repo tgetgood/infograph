@@ -37,9 +37,9 @@
 
 (re-frame/reg-event-fx
  ::redraw-canvas
- (fn [{[_ elem d] :event}]
-   (let [window (-> elem canvas/context (canvas/Window. {}))]
-     {::redraw-canvas! [window d]})))
+ (fn [{[_ elem {:keys [window content]}] :event}]
+   (let [window (-> elem canvas/context (canvas/Window. window content))]
+     {::redraw-canvas! window})))
 
 (re-frame/reg-event-fx
  ::dom-event
@@ -51,10 +51,8 @@
  
 (re-frame/reg-fx
  ::redraw-canvas!
- (fn [[window drawing]]
-   (when drawing
-     (canvas/clear! window)
-     (canvas/draw! window drawing))))
+ (fn [window]
+   (canvas/refresh window)))
 
 (re-frame/reg-fx
  ::resize-canvas!
@@ -97,9 +95,16 @@
    (get-in db [:input :drag-position])))
 
 (re-frame/reg-sub
+ :window
+ (fn [db _]
+   (get-in db [:canvas :window])))
+
+(re-frame/reg-sub
  :canvas
  (fn [_ _]
    [(re-frame/subscribe [:canvas-raw])
-    (re-frame/subscribe [:inst-data])])
- (fn [[canvas data]]
-   (shapes/instantiate canvas data)))
+    (re-frame/subscribe [:inst-data])
+    (re-frame/subscribe [:window])])
+ (fn [[canvas data window]]
+   {:window window
+    :content (shapes/instantiate canvas data)}))

@@ -10,7 +10,7 @@
   (into (empty this)
         (map #(apply f % args)) this))
 
-(defn map-recur 
+(defn map-recur
   "Push f down into vals of this."
   [f this & args]
   (into {}
@@ -34,6 +34,10 @@
 (extend-protocol Instantiable
   default
   (instantiate [this _] this)
+
+  ;; REVIEW: I could do something fancy to make this concise, but as Herzog
+  ;; might say, but why?
+  ;; TODO: There are more collection types to add in
 
   cljs.core/PersistentArrayMap
   (instantiate [this data]
@@ -62,7 +66,7 @@
   cljs.core/PersistentQueue
   (instantiate [this data]
     (seq-recur instantiate this data))
-  
+
   cljs.core/PersistentHashSet
   (instantiate [this data]
     (seq-recur instantiate this data))
@@ -71,8 +75,6 @@
   (instantiate [this data]
     (seq-recur instantiate this data))
 
-  ;; TODO: Rest of the collection types
-  
   ValueSchema
   (instantiate [this data]
     (get-in data (.-query this)))
@@ -83,4 +85,4 @@
 
   ComputationSchema
   (instantiate [this input]
-    ((.-formula this) (get-in input (.-query this))))) 
+    ((.-formula this) (get-in input (.-query this)))))

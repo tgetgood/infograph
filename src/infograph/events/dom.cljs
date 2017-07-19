@@ -75,40 +75,46 @@
  ::zoom
  (fn [db [_ [z-centre z]]]
    (-> db
-       (update-in [:window :zoom] canvas/adjust-zoom z)
-       (update-in [:window :bottom-left] canvas/adjust-origin z-centre z))))
+       (update-in [:canvas :window :zoom] canvas/adjust-zoom z)
+       (update-in [:canvas :window :bottom-left] canvas/adjust-origin z-centre z))))
 
 (re-frame/reg-event-db
  ::drag
  (fn [db [_ loc]]
    (assoc-in db [:input :drag-position] loc)))
 
+(defn translate [p q]
+  (mapv + p q))
+
 (re-frame/reg-event-db
  ::move
- (fn [db [_ loc]]
-   (assoc-in db [:input :strokes 0 :current] loc)))
+ (fn [db [_  [x y :as loc]]]
+   (let [mode (get-in db [:canvas :input-mode])
+         [ox oy] (get-in db [:input :stroke 0 :current])]
+     (cond-> (assoc-in db [:input :stroke 0 :current] loc)
+       (and (= mode :grab)
+            (nil? (get-in db [:input :stroke 0 :end]))
+            (not (nil? (get-in db [:input :stroke 0 :current])))
+            (not (nil? (get-in db [:input :stroke 0 :start]))))
+       (update-in [:canvas :window :bottom-left] translate
+                  [(- ox x) (- oy y)])))))
 
 (re-frame/reg-event-db
  ::stroke-start
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
-     (if (= mode :grab)
-       ;; FIXME: ugly
-       db
-       (let [constructor (get shapes/construction-map mode)]
-         (-> db
-             (assoc-in [:input :stroke 0] {:start loc})
-             (update-in [:canvas :shape] conj (constructor loc))))))))
+     (let [constructor (get shapes/construction-map mode)]
+       (cond-> (assoc-in db [:input :stroke 0] {:start loc})
+         (not= mode :grab)
+         (update-in [:canvas :shape] conj (constructor loc)))))))
 
 (re-frame/reg-event-db
  ::stroke-end
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
-     (if (= mode :grab)
-       db
-       (-> db
-           (assoc-in [:input :stroke 0 :end] loc)
-           (update-in [:canvas :shape] shapes/instantiate db))))))
+     (cond-> (assoc-in db [:input :stroke 0 :end] loc)
+       (not= mode :grab)
+       (update-in [:canvas :shape] shapes/instantiate db)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Canvas
