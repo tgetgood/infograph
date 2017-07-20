@@ -577,14 +577,14 @@
 	 mistake. Instead shapes should draw themselves to the window. But they need
 	 to ask the window first whether they can be drawn and have the window
 	 transform the shape into window pixels.
-	 
+
 	 So we need something like a RealShape which a window transforms into a
 	 PixelShape, which implements Drawable.
-	 
+
 	 So the redraw-canvas event side effect would need to take the DOM element,
 	 the window state, and the R² state, and pipe it all together to create a
 	 PixelShape which then gets drawn.
-	 
+
 	 It's not quite that simple because the pixel shape creation has to be
 	 recursive and lazy, but it shouldn't be that complicated. Compound
 	 PixelShapes would have RealShapes as sub pieces and would go through the
@@ -593,8 +593,40 @@
 	 Or is this all wrong and the shapes should take a window and decide for
 	 themselves whether they're in it? After all the window can't see forward to
 	 decide on all possible shapes.
-	 
+
 	 Only problem there is what clears the frame and draws the grid/axes?
+** [2017-07-19 Wed 14:59]
+	 So windows know how to transform individual coordinates, but only shapes know
+	 what their coordinates are. That seems like a reasonable way to break things
+	 down.
+
+	 Got a huge problem at the moment with constructors, everything is broken. Not
+	 a good sign when you consider how little is actually going on. Need to
+	 simplify. Is the goal to get rid of all the code? Maybe it should be...
+** [2017-07-19 Wed 15:06]
+	 I've been thinking about lazy rendering, and I have a couple of ideas of how
+	 to manage it.
+
+	 The simplest would be to implement instantiation for lazy seqs and insist
+	 that anything infinite be lazy. I'm not sure that would scale down to
+	 infinite fractals that only show up as you zoom.
+
+	 An alternate approach would be to instantiate on demand within the render
+	 loop. This would necessitate passing in both the render schemata and the app
+	 state to the render function and would complect rendering with dynamism. Well
+	 it wouldn't neccessarily complect if there were a third operator whose only
+	 task was to alternately instantiate and render. I don't know. Needs more
+	 thought.
+
+** [2017-07-20 Thu 10:36]
+	 Current thoughts: It seems it would be best if I implement instantiable
+	 properly for lazy seqs and depend on laziness when implementing infinite
+	 designs. That is depend on clojure's existing laziness in contrast to
+	 implementing my own lazy mutually recursive instantiate-draw-... loop.
+
+	 That's kind of obvious once written down. So why have I been thinking so much
+	 about it? I'm still going to have to implement drawing to be lazy, but
+	 there's no reason to mix dynamic state with rendering.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 
