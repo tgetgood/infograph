@@ -538,6 +538,40 @@
 			 abstract shapes, and shape constructors. Abstract shapes depend on the
 			 data, shape constructors depend on user input, and shapes are just data.
 
+** Levels of Abstraction of Canvas
+	 So we have a stateless wrapper over canvas. This is just a convenience to not
+	 have to manually manage global state.
+
+	 Over that we have what I'm calling a window. This is a model of 2d space as
+	 the (infinite) cartesian plane with a window showing some finite rectangle of
+	 it at a given projection factor (linear projection). Note that this window
+	 also converts the cartesian y axis to the cg y-axis so that from a user's
+	 point of view coordinates work like they ought to.
+
+	 Over this — conceptually, though in implementation the same object might
+	 satisfy both protocols — we have an event handling system that does the
+	 inverse translation from pixel coordinates to cartesian coordinates and
+	 delegates events appropriately to the things effected.
+
+	 Within the window we have shapes, or visual objects, which are dynamically
+	 dependent on data external to themselves. The nature of this data falls into
+	 4 categories:
+	 1. Static
+			Constants, frames, backgrounds, other fixed things.
+	 2. External API
+			JSON, or whatever containing the info of the graphic.
+	 3. Designer input
+			That is user input during the graphic design phase. In this way,
+			interactive component creation mimicks use.
+	 4. User input
+			For interactive designs.
+
+	 Notice that each of these data types can be applied independently and except
+	 for the last ahead of time. This allows us to "compile in" the data we want
+	 to use to deliver an infographic as a single js file. Not sure that's useful,
+	 but there's a nice mathematical feel to the commutative idempotency.
+
+* Log
 ** [2017-07-11 Tue 12:20]
 	 Interesting connection: we want to be able to create an object from one
 	 member of a list and then create a compound by iterating over the list and
@@ -627,6 +661,12 @@
 	 That's kind of obvious once written down. So why have I been thinking so much
 	 about it? I'm still going to have to implement drawing to be lazy, but
 	 there's no reason to mix dynamic state with rendering.
+** [2017-07-20 Thu 11:14]
+	 Should the canvas wrapper invert y-coords? It feels like it would be nicer if
+	 the canvas wrapper did nothing but make the api stateless. It would then be
+	 up to the window object to invert coords from the normal Cartesian plane to
+	 CG coords. It's already responsible for the zoom and pan calculation, so it
+	 feels like a more natural place.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 
