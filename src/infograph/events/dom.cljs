@@ -86,16 +86,18 @@
 (defn translate [p q]
   (mapv + p q))
 
+(defn- in-stroke? [db]
+  (and (nil? (get-in db [:input :strokes 0 :end]))
+       (not (nil? (get-in db [:input :strokes 0 :current])))
+       (not (nil? (get-in db [:input :strokes 0 :start])))))
+
 (re-frame/reg-event-db
  ::move
  (fn [db [_  [x y :as loc]]]
    (let [mode (get-in db [:canvas :input-mode])
-         [ox oy] (get-in db [:input :stroke 0 :current])]
-     (cond-> (assoc-in db [:input :stroke 0 :current] loc)
-       (and (= mode :grab)
-            (nil? (get-in db [:input :stroke 0 :end]))
-            (not (nil? (get-in db [:input :stroke 0 :current])))
-            (not (nil? (get-in db [:input :stroke 0 :start]))))
+         [ox oy] (get-in db [:input :strokes 0 :current])]
+     (cond-> (assoc-in db [:input :strokes 0 :current] loc)
+       (and (= mode :grab) (in-stroke? db))
        (update-in [:canvas :window :bottom-left] translate
                   [(- ox x) (- oy y)])))))
 
@@ -104,7 +106,7 @@
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
      (let [constructor (get shapes/construction-map mode)]
-       (cond-> (assoc-in db [:input :stroke 0] {:start loc})
+       (cond-> (assoc-in db [:input :strokes 0] {:start loc})
          (not= mode :grab)
          (update-in [:canvas :shape] conj (constructor loc)))))))
 
@@ -112,7 +114,7 @@
  ::stroke-end
  (fn [db [_ loc]]
    (let [mode (get-in db [:canvas :input-mode])]
-     (cond-> (assoc-in db [:input :stroke 0 :end] loc)
+     (cond-> (assoc-in db [:input :strokes 0 :end] loc)
        (not= mode :grab)
        (update-in [:canvas :shape] shapes/instantiate db)))))
 

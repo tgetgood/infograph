@@ -1,7 +1,7 @@
 (ns infograph.shapes
-  (:require [infograph.canvas :as canvas]
-            [infograph.shapes.constructors :as constructors]
-            [infograph.shapes.impl :as impl]))
+  (:require [infograph.shapes.constructors :as constructors]
+            [infograph.shapes.impl :as impl]
+            [infograph.window.protocols :as wp]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Normalisation
@@ -41,10 +41,11 @@
   (toString [_]
     (str "infograph.shapes.Composite - "{:shapes shapes}))
 
-  canvas/Drawable
-  (canvas/draw! [this window]
+  wp/Drawable
+  (wp/draw! [this window]
     (doseq [shape shapes]
-      (canvas/draw! shape window)))
+      ;; 
+      (wp/draw! shape window)))
 
   impl/Instantiable
   (impl/instantiate [_ data]

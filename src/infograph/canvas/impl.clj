@@ -1,4 +1,4 @@
-(ns infograph.canvas)
+(ns infograph.canvas.impl)
 
 (defmacro with-stroke
   "Wraps body in boilerplate code for strokes on canvas and executes."
@@ -18,5 +18,7 @@
   `(let [old# (save-style ~ctx)]
      (set-style! ~ctx ~style)
      ~@body
-     (set-style! ~ctx old#)))
+     (set-style! ~ctx old#)
+     ;; We don't want to arbitrarily return the last property set.
+     nil))
 

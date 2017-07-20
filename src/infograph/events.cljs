@@ -3,6 +3,8 @@
             [infograph.db :as db]
             [infograph.events.dom :as dom-events]
             [infograph.shapes :as shapes]
+            [infograph.window :as window]
+            [infograph.window.protocols :as wp]
             [re-frame.core :as re-frame]))
 
 (defn q [name]
@@ -38,7 +40,7 @@
 (re-frame/reg-event-fx
  ::redraw-canvas
  (fn [{[_ elem {:keys [window content]}] :event}]
-   (let [window (-> elem canvas/context (canvas/Window. window content))]
+   (let [window (-> elem canvas/context (window/create window content))]
      {::redraw-canvas! window})))
 
 (re-frame/reg-event-fx
@@ -52,7 +54,7 @@
 (re-frame/reg-fx
  ::redraw-canvas!
  (fn [window]
-   (canvas/refresh window)))
+   (wp/refresh window)))
 
 (re-frame/reg-fx
  ::resize-canvas!
