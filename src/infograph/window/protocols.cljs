@@ -14,8 +14,6 @@
     "Returns pixel coords in this window for given Cartesian coords.")
   (coords [this px] "Convert pixel coords back to Cartesian coords."))
 
-;; HACK:
-(extend-protocol Drawable
-  nil
-  (draw? [_ _] false)
-  (draw! [_ _]))
+;; TODO: Separate this into draw entry (or just drawable), coord transform, and
+;; event handling?
+

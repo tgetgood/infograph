@@ -667,6 +667,46 @@
 	 up to the window object to invert coords from the normal Cartesian plane to
 	 CG coords. It's already responsible for the zoom and pan calculation, so it
 	 feels like a more natural place.
+** [2017-07-20 Thu 19:44]
+	 The app state is thoroghly fuddled.
+
+	 Would it make sense to separate it into 3 distinct pieces; the data, the
+	 graphic, and the window? There are actually 2 windows that exist at different
+	 points of the lifecycle, call them the design window and the user window. It
+	 would be important for the designer to be able to see either, but that's not
+	 important right now.
+
+	 Things are still a mess. So how do we structure the moving parts to simplify?
+
+	 Simplification: Unified handling of dom events. That will entail mergeing the
+	 current window and input states into a single thing. At first sight that
+	 feels like mixing two fundamentally different things, but on further
+	 inspection I'm not so sure. Here's the debate: on the one hand, you can think
+	 of the graphic as something created by input and existing in the full glory
+	 of ℜ², and the window just selects a subset of the plane to render into view.
+
+	 On the other hand, we can think of the graphic as an abstract representation
+	 of shape dependent on the history of DOM events. This feels a little awkward,
+	 but when you think about it on the user end, moving things around with the
+	 mouse and moving the plane by panning and zooming are the same kind of
+	 operation. The difference in design between "finishable" constructors and
+	 dealing with the reality of a finite view of an infinite thing is superficial
+	 because all it is in reality is the fact that we throw away the window state
+	 but treat the designer's input state as set in stone.
+
+	 I really need to clarify my writing (and thinking) on the different kinds of
+	 graphical dynamism.
+** [2017-07-21 Fri 11:00]
+	 Gave this some thought last night on the train.
+
+	 Things would be a lot simpler if we have one process that collects raw events
+	 into a data structure, a second which reads the first and aggregates higher
+	 level events — business logic so to speak; higher level events like strokes
+	 made up of hundreds of mouse-moves — and a final reduction of the event
+	 stream into the current state of the app.
+
+	 This is, as far as I understand it, the Elm architecture. Time to do some
+	 reading.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 

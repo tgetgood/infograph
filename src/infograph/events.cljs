@@ -19,7 +19,6 @@
 
 (re-frame/reg-event-db
  :update-data-value
- ;; TODO: history and undo
  (fn [db [_ p v]]
    (assoc-in db (cons :data p) v)))
 

@@ -35,8 +35,6 @@
   default
   (instantiate [this _] this)
 
-  ;; REVIEW: I could do something fancy to make this concise, but as Herzog
-  ;; might say, but why?
   ;; TODO: There are more collection types to add in
 
   cljs.core/PersistentArrayMap

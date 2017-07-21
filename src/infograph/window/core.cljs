@@ -28,6 +28,7 @@
   protocols/ViewFrame
   (protocols/refresh [this]
     (canvas/clear ctx)
+    ;; TODO: Render a grid so that the window is more obvious...
     (let [{[x y] :bottom-left z :zoom w :width h :height} window]
       (when (on-screen? [0 y] window)
         (canvas/line ctx axis-style (pixels this [0 y]) (pixels this [0 (+ y h)])))

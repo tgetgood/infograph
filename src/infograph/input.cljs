@@ -39,11 +39,6 @@
   ;; and I keep tripping on that.
   (render [this path] "Produce hiccup from renderable data."))
 
-(extend-protocol IRender
-  nil
-  (render [_ _]))
-
-
 (defn drag-start [p ev]
   (.setData (.-dataTransfer ev) "path" p))
 

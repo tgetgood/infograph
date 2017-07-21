@@ -61,11 +61,12 @@
     [:drag-over]               [::drag]
     [:wheel]                   [::zoom]}))
 
-;; THOUGHTS: When an event comes in from the dom, should we look at the input
-;; mode and construct an internal event object? That would
-
 (defn get-handlers [evt]
   (event-map evt))
+
+(defprotocol EventWindow
+  (dispatch [this ev])
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Events
