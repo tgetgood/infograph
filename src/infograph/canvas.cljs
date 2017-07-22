@@ -1,5 +1,5 @@
 (ns infograph.canvas
-  (:require [infograph.canvas.impl :as impl]))
+  (:require-macros [infograph.canvas :refer [with-style with-stroke]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Canvas Manipulation
@@ -17,7 +17,7 @@
   (set! (.-height canvas) height))
 
 ;; The following might be more appropriately placed in the infograph.events.dom
-;; ns.
+;; ns. infograph.window? We probably need a new set of concerns to deal with thss
 
 (defn drag-location [e]
   [(.-pageX e) (.-pageY e)])
@@ -36,27 +36,55 @@
 (defn analyse-zoom [ev]
   [(click-location ev) (.-deltaY ev)])
 
-;;;;; Window
-
-(defn adjust-origin
-  "Given an origin, a centre of zoom and a zoom scale, return the new
-  origin."
-  [[x y] [zx zy] delta-z]
-  [(/ (- zx x) delta-z) (/ (- zy y) delta-z)])
-
-(defn adjust-zoom [z delta]
-  ;; REVIEW: This may not be ideal...
-  (+ z delta))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; External API
+;;;;; Canvas Wrapper
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; Protocol
+
+(defprotocol ICanvas
+  "Wrapper around HTML Canvas elements with a stateless API. All stateful canvas
+  setters are replaced by the style map."
+  ;; TODO: Presumably I should wrap the entire canvas API.
+  (clear [this])
+  (line [this style p q])
+  (rectangle [this style p q]
+    "Rectangle defined by bottom left and top right corners")
+  (circle [this style centre radius]))
+
+;;;;; Styling
+
+;; FIXME: little more than a stub.
+(defn- save-style [ctx]
+  {:stroke-style (.-strokeStyle ctx)})
+
+(defn- set-style! [ctx style]
+  (set! (.-strokeStyle ctx) (:stroke-style style)))
+
+;;;;; Canvas
+
+(deftype Canvas [elem ctx]
+  ICanvas
+  (clear [_]
+    (let [width (.-clientWidth elem)
+          height (.-clientHeight elem)]
+      (.clearRect ctx 0 0 width height)))
+  (line [_ style [x1 y1] [x2 y2]]
+    (with-style ctx style
+      (with-stroke ctx
+        (.moveTo ctx x1 y1)
+        (.lineTo ctx x2 y2))))
+  (rectangle [_ style [x1 y1] [x2 y2]]
+    (with-style ctx style
+      (with-stroke ctx
+        (.moveTo ctx x1 y1)
+        (.rect ctx x1 y1 (- x2 x1) (- y2 y1)))))
+  (circle [_ style [x y] r]
+    (with-style ctx style
+      (with-stroke ctx
+        (.moveTo ctx (+ r x) y)
+        (.arc ctx x y r 0 (* 2 js/Math.PI))))))
 
 (defn context [elem]
   (let [ctx (.getContext elem "2d")]
-    (impl/Canvas. elem ctx)))
-
-(def clear impl/clear)
-(def line impl/line)
-(def circle impl/circle)
-(def rectangle impl/rectangle)
+    (Canvas. elem ctx)))

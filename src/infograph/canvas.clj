@@ -1,4 +1,4 @@
-(ns infograph.canvas.impl)
+(ns infograph.canvas)
 
 (defmacro with-stroke
   "Wraps body in boilerplate code for strokes on canvas and executes."
