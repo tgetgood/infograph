@@ -359,6 +359,22 @@
 	 the head of that named path and listen for that path ending to reify
 	 itself. I need a more fine grained vocabulary.
 
+*** Plan
+		Stratified design.
+
+		Level 1 aggregates all mouse events into some sort of indexed data
+		structure.
+
+		Level 2 maps aggregated events into higher level constructs that we care
+		about.
+
+		Level 3 reduces over the higher level events to produce the app state.
+
+		This kind of separation will allow me to focus on single touch for now with
+		minimal changes to convert to multi-touch. Multi user would be another layer
+		inserted between 2 and 3. Eternal conundrum: Put in a dummy layer now, or
+		just accept that I'll need to refactor. Knuth wins.
+
 ** Interactive Canvas
 *** Ramblings
 		So we don't have an event model on canvas. I knew that, but I've been putting
@@ -556,6 +572,7 @@
 	 Within the window we have shapes, or visual objects, which are dynamically
 	 dependent on data external to themselves. The nature of this data falls into
 	 4 categories:
+
 	 1. Static
 			Constants, frames, backgrounds, other fixed things.
 	 2. External API
@@ -570,6 +587,44 @@
 	 for the last ahead of time. This allows us to "compile in" the data we want
 	 to use to deliver an infographic as a single js file. Not sure that's useful,
 	 but there's a nice mathematical feel to the commutative idempotency.
+
+** Cartesian and Pixel Windows
+	 Really a window is two polymorphic functions:
+
+	 project :: W -> ℜⁿ -> Pⁿ, ∀ n
+	 inject :: W -> Pⁿ -> ℜⁿ, ∀ n
+
+	 Plus a monomorphic function:
+
+	 contains? :: W -> ℜ² -> Bool or W -> P² -> Bool
+
+	 I'm not sure which is more appropriate. Maybe we want both.
+
+	 N.B.: Above ℜⁿ are n-dimensional real coordinates and Pⁿ are n-dimensional
+	 pixel coordinates. W is a window. The dimensons of coordinates need to be
+	 strictly smaller than the dimensions of the window for the functions to make
+	 any sense.
+
+	 So what's a window? A (2D) window is two rectangles, one in pixel space and
+	 one in real space where the ratio of width to height is identical. The
+	 location of the rectangle is always fixed with the top left corner at the
+	 origin. The rectangle in real space is free to move anywhere it pleases. Note
+	 that the y-axis is flipped in pixel space but *not* in real space.
+
+	 The ratio of \frac{h_ℜ}{h_P} is called the zoom. This ratio is the same as
+	 \frac{w_ℜ}{w_P} since the ratios of the rectangles are assumed to be equal.
+
+	 Thus the window is uniquely determined by a corner in real space, the width
+	 and height in either space, and the zoom factor.
+
+*** Concerns
+**** Zoom
+		 I still need a good way to turn a bunch of ints into a real between 0 and infinty.
+		 The reduction over the ints needs to be associative and commutative otherwise
+		 behaviour is going to be weird.
+
+		 What if we just take the sum and then apply 1/-x to negatives (1, 0, and -1
+		 are treated as 1). Let's give it a shot.
 
 * Log
 ** [2017-07-11 Tue 12:20]
@@ -705,8 +760,26 @@
 	 made up of hundreds of mouse-moves — and a final reduction of the event
 	 stream into the current state of the app.
 
-	 This is, as far as I understand it, the Elm architecture. Time to do some
+	 This is, as far as I understand it, Elm's architecture. Time to do some
 	 reading.
+** [2017-07-22 Sat 11:30]
+	 The three type signatures that make up the elm architecture are what I'm
+	 going for, but I don't think elm's focus on concurrency is right for this. I
+	 want transparency between the data and the end result, actors really muck
+	 that up.
+
+	 Parallelism should be hidden behind the scenes if possible, history shows
+	 that we humans aren't so hot at dealing with it manually. Conceptually every
+	 visual object is concurrent in its dependency on the data. But once we
+	 introduce constraints, it won't be so easy. Fortunately the constraints — in
+	 so far as I've thought about them — are primarily visual, so they can still
+	 be transparent to the designer even if the implementation is horrifyingly
+	 complex.
+
+* TODOs
+** TODO Clean up this file
+	 So much rambling thought process. Need to go through the whole thing and
+	 consolidate.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 

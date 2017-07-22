@@ -4,6 +4,12 @@
 
 ;;;;; Pixel Math
 
+(defn normalise-zoom [z]
+  (cond
+    (> z 1) z
+    (< z -1) (/ 1 (- x))
+    :else 1))
+
 (defn- on-screen?
   "Returns true if the point [x y] is in the given window."
   [[x y] {[ox oy] :bottom-left  :keys [width height zoom]}]
