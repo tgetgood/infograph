@@ -39,6 +39,11 @@
   ;; and I keep tripping on that.
   (render [this path] "Produce hiccup from renderable data."))
 
+(extend-protocol IRender
+  nil
+  (render [_ _]
+    (.error js/console "Attempting to render nil input element.")))
+
 (defn drag-start [p ev]
   (.setData (.-dataTransfer ev) "path" p))
 

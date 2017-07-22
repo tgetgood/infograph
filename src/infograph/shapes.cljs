@@ -1,7 +1,7 @@
 (ns infograph.shapes
   (:require [infograph.shapes.constructors :as constructors]
             [infograph.shapes.impl :as impl]
-            [infograph.window.protocols :as wp]))
+            [infograph.protocols :as protocols]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Normalisation
@@ -35,24 +35,28 @@
   ;; this guy.
   ISeqable
   (^clj-or-nil -seq [_]
-   (seq {:shapes shapes}))
+   (seq shapes))
 
   Object
   (toString [_]
     (str "infograph.shapes.Composite - "{:shapes shapes}))
 
-  wp/Drawable
-  (wp/draw! [this window]
+  protocols/Drawable
+  (protocols/draw! [this window]
+    (.log js/console shapes)
     (doseq [shape shapes]
-      ;; 
-      (wp/draw! shape window)))
+      (protocols/draw! shape window)))
+
+  protocols/Projectable
+  (protocols/project [_ window]
+    (Composite. (into #{} (map #(protocols/project % window) shapes))))
 
   impl/Instantiable
   (impl/instantiate [_ data]
     (Composite. (impl/instantiate shapes data))))
 
 (defn empty-composite []
-  (Composite. #{} :composite))
+  (Composite. #{}))
 
 ;;;;; Dev cruft
 
@@ -74,3 +78,18 @@
    :circle constructors/circle-constructor})
 
 (def instantiate impl/instantiate)
+
+#_(def axis-style
+    {:stroke-style "rgba(0,0,0,0.2)"})
+
+#_(defrecord Window [ctx window content]
+    protocols/ViewFrame
+    (protocols/refresh [this]
+      (canvas/clear ctx)
+      ;; TODO: Render a grid so that the window is more obvious...
+      (let [{[x y] :origin z :zoom w :width h :height} window]
+        (when (on-screen? [0 y] window)
+          (canvas/line ctx axis-style (pixels this [0 y]) (pixels this [0 (+ y h)])))
+        (when (on-screen? [x 0] window)
+          (canvas/line ctx axis-style (pixels this [x 0]) (pixels this [(+ x w) 0]))))
+      (protocols/draw! content this)))

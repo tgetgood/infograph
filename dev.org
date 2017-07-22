@@ -594,6 +594,9 @@
 	 project :: W -> ℜⁿ -> Pⁿ, ∀ n
 	 inject :: W -> Pⁿ -> ℜⁿ, ∀ n
 
+	 project w inject w p = p
+	 inject w project w q = q
+
 	 Plus a monomorphic function:
 
 	 contains? :: W -> ℜ² -> Bool or W -> P² -> Bool
@@ -612,7 +615,8 @@
 	 that the y-axis is flipped in pixel space but *not* in real space.
 
 	 The ratio of \frac{h_ℜ}{h_P} is called the zoom. This ratio is the same as
-	 \frac{w_ℜ}{w_P} since the ratios of the rectangles are assumed to be equal.
+	 \frac{w_ℜ}{w_P} since the aspect ratios of the rectangles are assumed to be
+	 equal.
 
 	 Thus the window is uniquely determined by a corner in real space, the width
 	 and height in either space, and the zoom factor.

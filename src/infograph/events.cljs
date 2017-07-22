@@ -2,9 +2,8 @@
   (:require [infograph.canvas :as canvas]
             [infograph.db :as db]
             [infograph.events.dom :as dom-events]
+            [infograph.protocols :as protocols]
             [infograph.shapes :as shapes]
-            [infograph.window :as window]
-            [infograph.window.protocols :as wp]
             [re-frame.core :as re-frame]))
 
 (defn q [name]
@@ -38,9 +37,11 @@
 
 (re-frame/reg-event-fx
  ::redraw-canvas
- (fn [{[_ elem {:keys [window content]}] :event}]
-   (let [window (-> elem canvas/context (window/create window content))]
-     {::redraw-canvas! window})))
+ (fn [{[_ elem content] :event}]
+   (let [ctx (-> elem canvas/context)]
+     (.log js/console content
+          )
+     {::redraw-canvas! [ctx content]})))
 
 (re-frame/reg-event-fx
  ::dom-event
@@ -52,8 +53,9 @@
  
 (re-frame/reg-fx
  ::redraw-canvas!
- (fn [window]
-   (wp/refresh window)))
+ (fn [[ctx content]]
+   (.log js/console content)
+   (protocols/draw! content ctx)))
 
 (re-frame/reg-fx
  ::resize-canvas!
@@ -107,5 +109,6 @@
     (re-frame/subscribe [:inst-data])
     (re-frame/subscribe [:window])])
  (fn [[canvas data window]]
-   {:window window
-    :content (shapes/instantiate canvas data)}))
+   (-> canvas
+       (shapes/instantiate data)
+       (protocols/project window))))

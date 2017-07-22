@@ -9,14 +9,14 @@
 (defn canvas-inner []
   (reagent/create-class
    {:component-did-mount  (fn [this]
-                            (let [drawing (reagent/props this)
+                            (let [drawing (:hack (reagent/props this))
                                   elem (reagent/dom-node this)]
                               (re-frame/dispatch
                                [(events/q :resize-canvas) elem])
                               (re-frame/dispatch
                                [(events/q :redraw-canvas) elem drawing])))
     :component-did-update (fn [this]
-                            (let [drawing (reagent/props this)
+                            (let [drawing (:hack (reagent/props this))
                                   elem (reagent/dom-node this)]
                               (re-frame/dispatch
                                [(events/q :redraw-canvas) elem drawing])))
@@ -31,7 +31,9 @@
          :style {:width "100%"
                  :height "100%"
                  :overflow "hidden"}}
-   [canvas-inner drawing]])
+   ;; HACK: Custom types don't get picked up by reagent/props. They can be taken
+   ;; out at a lower level, but I don't see that as any better.
+   [canvas-inner {:hack drawing}]])
 
 (defn input-mode [type]
   {:on-click

@@ -1,7 +1,7 @@
 (ns infograph.events.dom
   (:require [infograph.canvas :as canvas]
             [infograph.shapes :as shapes]
-            [infograph.window.core :as window]
+            [infograph.window :as window]
             [re-frame.core :as re-frame]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -75,10 +75,10 @@
 
 (re-frame/reg-event-db
  ::zoom
- (fn [db [_ [z-centre z]]]
+ (fn [db [_ [zc dz]]]
+   (.log js/console (:window db))
    (-> db
-       (update-in [:canvas :window :zoom] window/adjust-zoom z)
-       (update-in [:canvas :window :bottom-left] window/adjust-origin z-centre z))))
+       (update-in [:canvas :window] window/zoom-window dz zc))))
 
 (re-frame/reg-event-db
  ::drag
@@ -95,13 +95,12 @@
 
 (re-frame/reg-event-db
  ::move
- (fn [db [_  [x y :as loc]]]
+ (fn [db [_  loc]]
    (let [mode (get-in db [:canvas :input-mode])
          [ox oy] (get-in db [:input :strokes 0 :current])]
      (cond-> (assoc-in db [:input :strokes 0 :current] loc)
        (and (= mode :grab) (in-stroke? db))
-       (update-in [:canvas :window :bottom-left] translate
-                  [(- ox x) (- oy y)])))))
+       (update-in [:canvas :window] window/pan-window loc)))))
 
 (re-frame/reg-event-db
  ::stroke-start

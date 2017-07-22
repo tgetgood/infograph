@@ -39,12 +39,12 @@
   (spec/keys :req-un [::shape ::input-mode ::window]))
 
 (spec/def ::window
-  (spec/keys :req-un [::zoom ::bottom-left ::width ::height]))
+  (spec/keys :req-un [::zoom ::origin ::width ::height]))
 
 (spec/def ::width int?) ;FIXME: Will fail if screens get really big.
 (spec/def ::height int?)
-(spec/def ::zoom number?)
-(spec/def ::bottom-left ::coord)
+(spec/def ::zoom (spec/and number? #(< 0 %)))
+(spec/def ::origin ::coord)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; DB Template
@@ -57,7 +57,7 @@
    :canvas {:shape (shapes/empty-composite)
             :input-mode :grab
             :window {:zoom 1
-                     :bottom-left [1 0]
+                     :origin [1 0]
                      :width 0
                      :height 0}}})
 
