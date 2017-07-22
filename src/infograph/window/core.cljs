@@ -4,6 +4,16 @@
 
 ;;;;; Pixel Math
 
+(defn adjust-origin
+  "Given an origin, a centre of zoom and a zoom scale, return the new
+  origin."
+  [[x y] [zx zy] delta-z]
+  [(/ (- zx x) delta-z) (/ (- zy y) delta-z)])
+
+(defn adjust-zoom [z delta]
+  ;; REVIEW: This may not be ideal...
+  (+ z delta))
+
 (defn normalise-zoom [z]
   (cond
     (> z 1) z

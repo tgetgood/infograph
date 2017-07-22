@@ -1,6 +1,7 @@
 (ns infograph.events.dom
   (:require [infograph.canvas :as canvas]
             [infograph.shapes :as shapes]
+            [infograph.window.core :as window]
             [re-frame.core :as re-frame]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,8 +77,8 @@
  ::zoom
  (fn [db [_ [z-centre z]]]
    (-> db
-       (update-in [:canvas :window :zoom] canvas/adjust-zoom z)
-       (update-in [:canvas :window :bottom-left] canvas/adjust-origin z-centre z))))
+       (update-in [:canvas :window :zoom] window/adjust-zoom z)
+       (update-in [:canvas :window :bottom-left] window/adjust-origin z-centre z))))
 
 (re-frame/reg-event-db
  ::drag
