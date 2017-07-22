@@ -1,8 +1,15 @@
 (ns infograph.canvas
+  "Wrapper around HTML Canvas elements with a stateless API. All stateful canvas
+  setters are replaced by a style map. As compatible with manual canvas
+  manipulation as manual canvas manipulation is with itself."
   (:require-macros [infograph.canvas :refer [with-style with-stroke]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Canvas Manipulation
+;;;;; Canvas Manipulation
+;;
+;; Best way I could find to dynamically get the correct dimensions of the canvas
+;; element was to put it in a div with 100% height and width and then query that
+;; div at runtime.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn canvas-container []
@@ -16,6 +23,7 @@
   (set! (.-width canvas) width)
   (set! (.-height canvas) height))
 
+;; FIXME:
 ;; The following might be more appropriately placed in the infograph.events.dom
 ;; ns. infograph.window? We probably need a new set of concerns to deal with thss
 
@@ -43,8 +51,6 @@
 ;;;;; Protocol
 
 (defprotocol ICanvas
-  "Wrapper around HTML Canvas elements with a stateless API. All stateful canvas
-  setters are replaced by the style map."
   ;; TODO: Presumably I should wrap the entire canvas API.
   (clear [this])
   (line [this style p q])
