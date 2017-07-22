@@ -13,7 +13,7 @@
 ;;;;; Events
 
 (re-frame/reg-event-db
- :initialize-db
+ ::initialize-db
  (fn  [_ _]
    db/default-db))
 
