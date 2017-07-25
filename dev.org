@@ -818,6 +818,13 @@
 ** TODO Clean up this file
 	 So much rambling thought process. Need to go through the whole thing and
 	 consolidate.
+** TODO Event inversion
+	 Need to inversely project events into the cartesian plane so that clicking,
+	 dragging, etc., act on the things being clicked, dragged, etc..
+** TODO Dynamism
+	 I've been so tied up figuring out canvas that I haven't actually done
+	 anything regarding dragging data into shapes. There's a lot of work to be
+	 done before the core value of the app exists.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 
