@@ -630,6 +630,40 @@
 		 What if we just take the sum and then apply 1/-x to negatives (1, 0, and -1
 		 are treated as 1). Let's give it a shot.
 
+** Shapes, Visual object, and Drawing
+	 - Note taken on [2017-07-25 Tue 11:24] \\
+		 These notes are in the order I thought of them, That means in general that
+		 the earlier ones are outdated and the later bits are redundant. The themes
+		 that recur over and over are the ones that end up getting implemented. I
+		 read something where Andrew Bird said that that's how he composed music. I
+		 wonder if that's a good excuse?
+
+	 Looking at the instatiable and projectable protocol implementations, they're
+	 identical and contain no information. Given how Instantiable is implemented
+	 for the built in types, that's kind of silly; we don't need to implement
+	 Instantiable at all for the different shapes because it does the right thing
+	 as implemented for maps.
+
+	 The deal with Projectable is the same. We just need a base type for 2D
+	 coordinates so that we can project them correctly. All numbers should be
+	 treated as scalars — I don't see any context in which we want a number to
+	 stay fixed as we scale the entire graphic — so we don't need another type for
+	 that.
+
+	 With these changes, shapes just become data again. I think we still want them
+	 in records because draw is going to have to be polymorphic in the shape. What
+	 else is going to know how to draw something? A third party is what. I want
+	 ambiguous shapes. That is multiple representations of the same thing, not all
+	 of which need to be compatible. If we have two distinct ways to draw a line,
+	 you can either map your line to one of those, or define a new way to draw a
+	 line from your data. This is going to cause a proliferation problem unless
+	 the runtime is able to realise that you're reinventing the wheel and help
+	 correct you. That said this is one of the great problems of programming and
+	 I'm not really expecting to solve it...
+
+	 So what if we just use maps, and then have a multimethod dispatch on the
+	 result of a search for an appropriate renderer? That sounds expensive. But
+	 that's no reason not to try.
 * Log
 ** [2017-07-11 Tue 12:20]
 	 Interesting connection: we want to be able to create an object from one
