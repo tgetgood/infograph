@@ -50,6 +50,7 @@
    {[:mouse-down :mouse-move :mouse-up]   canvas/click-location
     [:touch-start :touch-move :touch-end] canvas/touch-location
     [:drop]                               drop-path
+    [:click]                              canvas/click-location
     [:drag-over]                          canvas/drag-location
     [:wheel]                              canvas/analyse-zoom}))
 
@@ -58,6 +59,7 @@
    {[:mouse-down :touch-start] [::stroke-start]
     [:mouse-move :touch-move]  [::move]
     [:mouse-up :touch-end]     [::stroke-end]
+    [:click]                   [::click]
     [:drop]                    [::drop]
     [:drag-over]               [::drag]
     [:wheel]                   [::zoom]}))
@@ -74,9 +76,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-event-db
+ ::click
+ (fn [db [_ loc]]
+   (.log js/console loc)
+   db))
+
+(re-frame/reg-event-db
  ::zoom
  (fn [db [_ [zc dz]]]
-   (.log js/console (:window db))
    (-> db
        (update-in [:canvas :window] window/zoom-window dz zc))))
 
@@ -97,10 +104,10 @@
  ::move
  (fn [db [_  loc]]
    (let [mode (get-in db [:canvas :input-mode])
-         [ox oy] (get-in db [:input :strokes 0 :current])]
+         old (get-in db [:input :strokes 0 :current])]
      (cond-> (assoc-in db [:input :strokes 0 :current] loc)
        (and (= mode :grab) (in-stroke? db))
-       (update-in [:canvas :window] window/pan-window loc)))))
+       (update-in [:canvas :window] window/pan-window (mapv - old loc))))))
 
 (re-frame/reg-event-db
  ::stroke-start

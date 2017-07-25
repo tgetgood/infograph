@@ -18,6 +18,7 @@
 (defprotocol Projectable
   (project [this window] "Project this shape through the given window."))
 
+;;FIXME: What a name.
 (defprotocol CoProjectable
   (coproject [this window] "inject this event into the window"))
 
