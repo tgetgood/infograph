@@ -53,6 +53,7 @@
 (defprotocol ICanvas
   ;; TODO: Presumably I should wrap the entire canvas API.
   (clear [this])
+  (pixel [this style p])
   (line [this style p q])
   (rectangle [this style p q]
     "Rectangle defined by bottom left and top right corners")
@@ -75,6 +76,10 @@
     (let [width (.-clientWidth elem)
           height (.-clientHeight elem)]
       (.clearRect ctx 0 0 width height)))
+  (pixel [_ style [x y]]
+    (with-style ctx style
+      (.moveTo ctx x y)
+      (.fillRect ctx x y 1 1)))
   (line [_ style [x1 y1] [x2 y2]]
     (with-style ctx style
       (with-stroke ctx
@@ -93,4 +98,4 @@
 
 (defn context [elem]
   (let [ctx (.getContext elem "2d")]
-    (Canvas. elem ctx)))
+      (Canvas. elem ctx)))
