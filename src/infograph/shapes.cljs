@@ -1,7 +1,9 @@
 (ns infograph.shapes
-  (:require [infograph.shapes.constructors :as constructors]
+  (:require [infograph.canvas :as canvas]
+            [infograph.protocols :as protocols]
+            [infograph.shapes.constructors :as constructors]
             [infograph.shapes.impl :as impl]
-            [infograph.protocols :as protocols]))
+            [infograph.window :as window]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Normalisation
@@ -42,10 +44,18 @@
     (str "infograph.shapes.Composite - "{:shapes shapes}))
 
   protocols/Drawable
-  (protocols/draw! [this window]
-    (.log js/console shapes)
+  (protocols/draw! [this ctx]
+      (canvas/clear ctx)
+      ;; ;; TODO: Render a grid so that the window is more obvious...
+      ;; (let [{[x y] :origin :keys [width height]} w]
+      ;;   (when (window/on-screen? w [0 y])
+      ;;     (canvas/line ctx axis-style (window/project w [0 y])
+      ;;                  (window/project w [0 (+ y height)])))
+      ;;   (when (window/on-screen? w [x 0])
+      ;;     (canvas/line ctx axis-style (window/project w [x 0])
+      ;;                  (window/project w [(+ x width) 0]))))
     (doseq [shape shapes]
-      (protocols/draw! shape window)))
+      (protocols/draw! shape ctx)))
 
   protocols/Projectable
   (protocols/project [_ window]

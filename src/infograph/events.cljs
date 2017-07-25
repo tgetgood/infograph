@@ -39,8 +39,6 @@
  ::redraw-canvas
  (fn [{[_ elem content] :event}]
    (let [ctx (-> elem canvas/context)]
-     (.log js/console content
-          )
      {::redraw-canvas! [ctx content]})))
 
 (re-frame/reg-event-fx
@@ -54,7 +52,6 @@
 (re-frame/reg-fx
  ::redraw-canvas!
  (fn [[ctx content]]
-   (.log js/console content)
    (protocols/draw! content ctx)))
 
 (re-frame/reg-fx
