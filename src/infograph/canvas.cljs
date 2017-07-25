@@ -68,7 +68,25 @@
 (defn- set-style! [ctx style]
   (set! (.-strokeStyle ctx) (:stroke-style style)))
 
+;;;;; Coord Fudgery
+;; REVIEW: It is handy to have these methods take either a vector [x y] or a map
+;; {:x x :y y} for a point. The isomorphism is obvious, but what are the
+;; consequences of adding ad-hoc polymorphism here?
+
+(defn parse
+  "Converts coord maps and coord vectors to vectors. Also checks nothing is
+  nil."
+  [p]
+  {:pre [(or (map? p) (vector? p))]
+   :post [(every? number? %)]}
+  (if (map? p)
+    [(:x p) (:y p)]
+    p))
+
 ;;;;; Canvas
+;; REVIEW: Would it be terrible form to take garbage values and just abort the
+;; render? That would simplify a lot of logic, but encourage
+;; sloppiness. Probably not worth it.
 
 (deftype Canvas [elem ctx]
   ICanvas
@@ -76,25 +94,31 @@
     (let [width (.-clientWidth elem)
           height (.-clientHeight elem)]
       (.clearRect ctx 0 0 width height)))
-  (pixel [_ style [x y]]
-    (with-style ctx style
-      (.moveTo ctx x y)
-      (.fillRect ctx x y 1 1)))
-  (line [_ style [x1 y1] [x2 y2]]
-    (with-style ctx style
-      (with-stroke ctx
-        (.moveTo ctx x1 y1)
-        (.lineTo ctx x2 y2))))
-  (rectangle [_ style [x1 y1] [x2 y2]]
-    (with-style ctx style
-      (with-stroke ctx
-        (.moveTo ctx x1 y1)
-        (.rect ctx x1 y1 (- x2 x1) (- y2 y1)))))
-  (circle [_ style [x y] r]
-    (with-style ctx style
-      (with-stroke ctx
-        (.moveTo ctx (+ r x) y)
-        (.arc ctx x y r 0 (* 2 js/Math.PI))))))
+  (pixel [_ style p]
+    (let [[x y] (parse p)]
+      (with-style ctx style
+        (.moveTo ctx x y)
+        (.fillRect ctx x y 1 1))))
+  (line [_ style p q]
+    (let [[x1 y1] (parse p)
+          [x2 y2] (parse q)]
+      (with-style ctx style
+        (with-stroke ctx
+          (.moveTo ctx x1 y1)
+          (.lineTo ctx x2 y2)))))
+  (rectangle [_ style p q]
+    (let [[x1 y1] (parse p)
+          [x2 y2] (parse q)]
+      (with-style ctx style
+        (with-stroke ctx
+          (.moveTo ctx x1 y1)
+          (.rect ctx x1 y1 (- x2 x1) (- y2 y1))))))
+  (circle [_ style c r]
+    (let [[x y] (parse c)]
+      (with-style ctx style
+        (with-stroke ctx
+          (.moveTo ctx (+ r x) y)
+          (.arc ctx x y r 0 (* 2 js/Math.PI)))))))
 
 (defn context [elem]
   (let [ctx (.getContext elem "2d")]

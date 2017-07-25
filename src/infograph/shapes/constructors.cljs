@@ -1,7 +1,7 @@
 (ns infograph.shapes.constructors
-  (:require [infograph.shapes.base :as base]
-            [infograph.shapes.impl
-             :refer [ComputationSchema SubSchema ValueSchema] :as impl]))
+  (:require [infograph.shapes.impl
+             :refer [ComputationSchema SubSchema ValueSchema Coordinate-2D Scalar]
+             :as impl]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; DSL
@@ -15,6 +15,12 @@
 
 (defn computation [q f]
   (cursor (ComputationSchema. q f)))
+
+(defn point [[x y]]
+  (Coordinate-2D. x y))
+
+(defn c-point [query]
+  (computation query point))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Geometry
@@ -33,19 +39,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn line-constructor [p]
-  (base/Line. {} p (value [:strokes 0 :current])))
+  {:type :line
+   :style {}
+   :p (point p)
+   :q (c-point [:strokes 0 :current])})
 
 (defn rectangle-constructor [p]
-  (base/Rectangle. {} p (value [:strokes 0 :current])))
+  #_(base/Rectangle. {} p (value [:strokes 0 :current])))
 
 (defn circle-constructor [c]
-  (base/Circle. {} c (computation [:strokes 0 :current] #(norm c %))))
+  {:type :circle
+   :style {}
+   :c (point c)
+   :r (computation [:strokes 0 :current] #(Scalar. (norm c %)))})
 
 ;;;;; Dev cruft
 
 (def example-line-schema
-  (base/Line.
-   {}
-   (SubSchema. [0] {:x (ValueSchema. [:x])
-                    :y (ValueSchema. [:y])})
-   [100 5]))
+  {:type :line
+   :style {}
+   :p (SubSchema. [0] {:x (ValueSchema. [:x])
+                       :y (ValueSchema. [:y])})
+   :q [100 5]})

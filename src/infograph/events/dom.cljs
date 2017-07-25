@@ -78,7 +78,7 @@
 (re-frame/reg-event-db
  ::click
  (fn [db [_ loc]]
-   (.log js/console loc)
+   #_(.log js/console loc)
    db))
 
 (re-frame/reg-event-db
@@ -116,7 +116,7 @@
      (let [constructor (get shapes/construction-map mode)]
        (cond-> (assoc-in db [:input :strokes 0] {:start loc})
          (not= mode :grab)
-         (update-in [:canvas :shape] conj (constructor loc)))))))
+         (update-in [:canvas :shape] shapes/conj-shape (constructor loc)))))))
 
 (re-frame/reg-event-db
  ::stroke-end

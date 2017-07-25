@@ -1,6 +1,5 @@
 (ns infograph.shapes
   (:require [infograph.canvas :as canvas]
-            [infograph.protocols :as protocols]
             [infograph.shapes.constructors :as constructors]
             [infograph.shapes.impl :as impl]
             [infograph.window :as window]))
@@ -23,60 +22,48 @@
 ;;;;; Shapes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Needs to be a type because I want custom conj behaviour.
-(deftype Composite [shapes]
-  cljs.core/ISet
-  (^clj -disjoin [_ o]
-   (Composite. (disj shapes o)))
+(defn empty-frame []
+  {:type :frame
+   :shapes #{}})
 
-  cljs.core/ICollection
-  (^clj -conj [_ o]
-   (Composite. (conj shapes o)))
-  
-  ;; Need to implement ISeqable otherwise the REPL errors out trying to print
-  ;; this guy.
-  ISeqable
-  (^clj-or-nil -seq [_]
-   (seq shapes))
+(defn conj-shape [c s]
+  (update c :shapes conj s))
 
-  Object
-  (toString [_]
-    (str "infograph.shapes.Composite - "{:shapes shapes}))
+(defn disj-shape [c s]
+  (update c :shapes disj s))
 
-  protocols/Drawable
-  (protocols/draw! [this ctx]
-      (canvas/clear ctx)
-      ;; ;; TODO: Render a grid so that the window is more obvious...
-      ;; (let [{[x y] :origin :keys [width height]} w]
-      ;;   (when (window/on-screen? w [0 y])
-      ;;     (canvas/line ctx axis-style (window/project w [0 y])
-      ;;                  (window/project w [0 (+ y height)])))
-      ;;   (when (window/on-screen? w [x 0])
-      ;;     (canvas/line ctx axis-style (window/project w [x 0])
-      ;;                  (window/project w [(+ x width) 0]))))
-    (doseq [shape shapes]
-      (protocols/draw! shape ctx)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Drawing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  protocols/Projectable
-  (protocols/project [_ window]
-    (Composite. (into #{} (map #(protocols/project % window) shapes))))
+(defn classify [x]
+  (:type x))
 
-  impl/Instantiable
-  (impl/instantiate [_ data]
-    (Composite. (impl/instantiate shapes data))))
+(defmulti draw! (fn [ctx shape] (classify shape)))
 
-(defn empty-composite []
-  (Composite. #{}))
+(defmethod draw! :circle
+  [ctx {:keys [c r style]}]
+  (canvas/circle ctx style c r))
 
-;;;;; Dev cruft
+(defmethod draw! :line
+  [ctx {:keys [style p q]}]
+  (when q
+    (canvas/line ctx style p q)))
 
-(def test-shape
-  {:start [0 0]
-   :end [500 200]
-   :type :line})
-
-(defrecord CartesianPlane []
-    )
+(defmethod draw! :frame
+  [ctx {:keys [shapes]}]
+  (canvas/clear ctx)
+  ;; TODO: Draw grid
+  ;;
+  ;; Problem is that it needs knowledge of the window as well as access to the
+  ;; context. So the grid has to be part of the composite that gets fed through
+  ;; the projection.
+  ;;
+  ;; It would also be neat if the grid could be an infinite number of infinitely
+  ;; long lines, that just get rendered on demand (lazily) so that we don't need
+  ;; to worry about calculating them explicitely.
+  (doseq [shape shapes]
+    (draw! ctx shape)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; External API to Shapes
@@ -88,18 +75,5 @@
    :circle constructors/circle-constructor})
 
 (def instantiate impl/instantiate)
+(def project impl/project)
 
-#_(def axis-style
-    {:stroke-style "rgba(0,0,0,0.2)"})
-
-#_(defrecord Window [ctx window content]
-    protocols/ViewFrame
-    (protocols/refresh [this]
-      (canvas/clear ctx)
-      ;; TODO: Render a grid so that the window is more obvious...
-      (let [{[x y] :origin z :zoom w :width h :height} window]
-        (when (on-screen? [0 y] window)
-          (canvas/line ctx axis-style (pixels this [0 y]) (pixels this [0 (+ y h)])))
-        (when (on-screen? [x 0] window)
-          (canvas/line ctx axis-style (pixels this [x 0]) (pixels this [(+ x w) 0]))))
-      (protocols/draw! content this)))

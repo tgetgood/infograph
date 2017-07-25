@@ -1,4 +1,6 @@
-(ns infograph.shapes.impl)
+(ns infograph.shapes.impl
+  (:require-macros [infograph.shapes.impl :refer [extend-recursive-tx]])
+  (:require [infograph.window :as window]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Extension Helpers
@@ -19,60 +21,35 @@
           this)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Schemata Types
+;;;;; Protocols
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defrecord ValueSchema [query])
-(defrecord SubSchema [query shape])
-(defrecord ComputationSchema [query formula])
 
 (defprotocol Instantiable
   "Instantiables are computations that know how to resolve themselves given data
   that doesn't exist yet. Like lenses, sort of."
   (instantiate [this data]))
 
+(defprotocol Projectable
+  "Projectables are shapes expressed in Cartesian coordinates that can be
+  transformed to pixel coordinates via linear (affine?) projection."
+  (project [this window]))
+
+;;; Generic Implementations
+
+(extend-recursive-tx Instantiable instantiate)
+(extend-recursive-tx Projectable project)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Schemata Types
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Instantiables
+
+(defrecord ValueSchema [query])
+(defrecord SubSchema [query shape])
+(defrecord ComputationSchema [query formula])
+
 (extend-protocol Instantiable
-  default
-  (instantiate [this _] this)
-
-  ;; TODO: There are more collection types to add in
-
-  cljs.core/PersistentArrayMap
-  (instantiate [this data]
-    (map-recur instantiate this data))
-
-  cljs.core/PersistentHashMap
-  (instantiate [this data]
-    (map-recur instantiate this data))
-
-  cljs.core/PersistentTreeMap
-  (instantiate [this data]
-    (map-recur instantiate this data))
-
-  cljs.core/PersistentTreeMapSeq
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/List
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentVector
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentQueue
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentHashSet
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
-  cljs.core/PersistentTreeSet
-  (instantiate [this data]
-    (seq-recur instantiate this data))
-
   ValueSchema
   (instantiate [this data]
     (get-in data (.-query this)))
@@ -84,3 +61,17 @@
   ComputationSchema
   (instantiate [this input]
     ((.-formula this) (get-in input (.-query this)))))
+
+;;; Projectables
+
+(defrecord Coordinate-2D [x y])
+(defrecord Scalar [v])
+
+(extend-protocol Projectable
+  Coordinate-2D
+  (project [this w]
+    (window/project w [(.-x this) (.-y this)]))
+
+  Scalar
+  (project [this w]
+    (window/project-scalar w (.-v this))))

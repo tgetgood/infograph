@@ -2,7 +2,6 @@
   (:require [infograph.canvas :as canvas]
             [infograph.db :as db]
             [infograph.events.dom :as dom-events]
-            [infograph.protocols :as protocols]
             [infograph.shapes :as shapes]
             [re-frame.core :as re-frame]))
 
@@ -52,7 +51,7 @@
 (re-frame/reg-fx
  ::redraw-canvas!
  (fn [[ctx content]]
-   (protocols/draw! content ctx)))
+   (shapes/draw! ctx content)))
 
 (re-frame/reg-fx
  ::resize-canvas!
@@ -108,4 +107,4 @@
  (fn [[canvas data window]]
    (-> canvas
        (shapes/instantiate data)
-       (protocols/project window))))
+       (shapes/project window))))

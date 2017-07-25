@@ -51,7 +51,8 @@
   "Project coordinates from the cartesian plane onto pixel coordinates through
   window w."
   [{[ox oy] :origin z :zoom :as w} [x y]]
-  (invert w [(* (- x ox) z) (* (- y oy) z)]))
+  (when (and (number? x) (number? y))
+    (invert w [(* (- x ox) z) (* (- y oy) z)])))
 
 (defn project-scalar
   [{z :zoom} s]
