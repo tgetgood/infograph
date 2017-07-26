@@ -315,38 +315,65 @@
 
 		Either way getting something basic working is priority one, so let's not get
 		lost in the cave.
-*** Considerations
-		We pass in a data structure to a shape schema. That schema then has to apply
-		parts of the data structure to its own subschemata. So a schema needs to
-		contain (or be) a mapping from paths to schemata. In the end there will be
-		values. Do we need a special schema property, or do we just let things
-		bottom out kind of naturally?
-
 ** Graphic Design Model
-	 So we have two fundamentally different sources of data. We have domain data,
-	 that is the JSON, or whatever comes in that will ultimately generate the
-	 graphic. This is comparable to a compile time thing. The second kind of data
-	 is the user's interaction history. These determine the state of interactivly
-	 defined widgets such as shape constructors.
+*** Previous Thoughts
+		- Note taken on [2017-07-26 Wed 10:50] \\
+			I'm keeping around outdated theorising so that I can track my thought
+			process over time. Will keeping this stuff around be too confusing? Will I
+			actually go back and benefit from seeing my past mistakes again? Sounds
+			like an obvious yes, but I'm suspicious.
 
-	 Thus we have a calculus with two operators: instantiate and react — names may
-	 vary. instantiate takes shape schemata to shapes. react takes shape templates
-	 to shapes. The two operators are idempotent and commute. That's a nice simple
-	 algebra. There's probably a whole theory of things like that if only I knew
-	 the name.
+		So we have two fundamentally different sources of data. We have domain data,
+		that is the JSON, or whatever comes in that will ultimately generate the
+		graphic. This is comparable to a compile time thing. The second kind of data
+		is the user's interaction history. These determine the state of interactivly
+		defined widgets such as shape constructors.
 
-	 See simple category diagram in notebook. I don't want to copy it at the
-	 moment.
+		Thus we have a calculus with two operators: instantiate and react — names may
+		vary. instantiate takes shape schemata to shapes. react takes shape templates
+		to shapes. The two operators are idempotent and commute. That's a nice simple
+		algebra. There's probably a whole theory of things like that if only I knew
+		the name.
 
-	 Widgets, unlike shapes have a lifecycle. Constructors in particular have to
-	 remove themselves and add concrete shapes in their place. Really this amounts
-	 to reacting in the source data itself. A partial evaluation of the data
-	 template.
+		See simple category diagram in notebook. I don't want to copy it at the
+		moment.
 
-	 This is the opposite of data linking, where concrete shapes need to be
-	 replaced with shape schemata.
+		Widgets, unlike shapes have a lifecycle. Constructors in particular have to
+		remove tHemselves and add concrete shapes in their place. Really this amounts
+		to reacting in the source data itself. A partial evaluation of the data
+		Template.
 
-	 Generalisation and specialisation. Familiar theme?
+		This is the opposite of data linking, where concrete shapes need to be
+		replaced with shape schemata.
+
+		Generalisation and specialisation. Familiar theme?
+*** Current
+		There are different kinds of data, but in reality they all behave the same
+		way as far as visual objects are concerned. All the objects care about is
+		getting data, they have no notion of origins.
+
+		The sources of data themselves are quite different in content, purpose, and
+		origin, but I think I can fully insulate the shapes from those details.
+
+		We still have the interesting phenomenon of deinstantiation that needs more
+		thought.
+
+		There's a fundamental symmetry between instantiation and
+		projection. Wouldn't it be facinating if there were a simmilar symmetry
+		between deinstantiation and coprojection?
+
+**** Partial Instantiation
+		 Given the lifecycle we have where some data is completely static, some is
+		 static by the end of development, and some is undetermined until the very
+		 last minute, there might be real performance gains to be had by partially
+		 instantiating the data and then only instantiating the rest when the time
+		 comes. Especially if instantiation starts to involve actual querying. That
+		 would be fairly trivial to implement if we take the convention that
+		 Schemata can't be instantiated by nil and just return themselves when that
+		 is attempted.
+
+		 Let's not overthink this at the moment, but it's good to know that we have
+		 a way to go if it becomes necessary.
 
 ** User input
 	 Touches and mouse movements need to be resolved into paths whose state is
@@ -376,183 +403,184 @@
 		just accept that I'll need to refactor. Knuth wins.
 
 ** Interactive Canvas
-*** Ramblings
-		So we don't have an event model on canvas. I knew that, but I've been putting
-		off thinking about it.
+*** Outdated Ideas
+**** Ramblings (Don't like this approach)
+		 So we don't have an event model on canvas. I knew that, but I've been putting
+		 off thinking about it.
 
-		Basically we want something finite state machine like. Given the JS event
-		model, we may as well use continuations for control. Clean it up with
-		core.async though.
+		 Basically we want something finite state machine like. Given the JS event
+		 model, we may as well use continuations for control. Clean it up with
+		 core.async though.
 
-		So a click or a dragstart or a hover will create a new continuation which
-		will listen on some sort of pub-sub setup for whatever kinds of events it's
-		interested. It will emit new state as a side effect into the app-db — which
-		will be a likely source of trouble — and will eventually teminate. So think
-		of the canvas handler as an actor factory where the actors are always short
-		lived. So coroutines. But not quite since they get messages over async
-		channels. I'm sure this wheel has been invented before.
+		 So a click or a dragstart or a hover will create a new continuation which
+		 will listen on some sort of pub-sub setup for whatever kinds of events it's
+		 interested. It will emit new state as a side effect into the app-db — which
+		 will be a likely source of trouble — and will eventually teminate. So think
+		 of the canvas handler as an actor factory where the actors are always short
+		 lived. So coroutines. But not quite since they get messages over async
+		 channels. I'm sure this wheel has been invented before.
 
-		Anywho, that seems reasonable. It will allow multiple of these things to be
-		running at once so that designs can react in parallel to user input.
+		 Anywho, that seems reasonable. It will allow multiple of these things to be
+		 running at once so that designs can react in parallel to user input.
 
-		There's going to be trouble with reloading since the current user action will
-		be spread out through async oblivion. I suppose I can solve this with an elm
-		like approach where the state of this mess of continuations is a function of
-		a stream of events. So I can save the user inputs, clear the system, restart
-		it, and play them back. Checkpointing will be pretty easy since once an actor
-		exits, the events it consumed are persistent in the app state, so if no
-		living actor has cared about an event we can drop it.
+		 There's going to be trouble with reloading since the current user action will
+		 be spread out through async oblivion. I suppose I can solve this with an elm
+		 like approach where the state of this mess of continuations is a function of
+		 a stream of events. So I can save the user inputs, clear the system, restart
+		 it, and play them back. Checkpointing will be pretty easy since once an actor
+		 exits, the events it consumed are persistent in the app state, so if no
+		 living actor has cared about an event we can drop it.
 
-		State management is also going to be a problem. The user selects the line
-		widget, then clicks, drags, and releases on the canvas. We need this event to
-		add a line from click start to click end to the drawing state. Dragging a
-		value from the data into the canvas should trigger popups when the drag
-		pauses over a visual object. Dropping into a visual object before the popup
-		appears needs to directly update the state. And so on.
+		 State management is also going to be a problem. The user selects the line
+		 widget, then clicks, drags, and releases on the canvas. We need this event to
+		 add a line from click start to click end to the drawing state. Dragging a
+		 value from the data into the canvas should trigger popups when the drag
+		 pauses over a visual object. Dropping into a visual object before the popup
+		 appears needs to directly update the state. And so on.
 
-		All of the above is easily enough done, but we need to retain enough
-		tracability and transparency that we don't end up in a tar pit. That sounds
-		exciting.
+		 All of the above is easily enough done, but we need to retain enough
+		 tracability and transparency that we don't end up in a tar pit. That sounds
+		 exciting.
 
-		Lots of exciting edge cases to worry about. Like the fact that every visual
-		object currently on the screen needs to listen for hover and dragover
-		events. These guys are in fact going to be more or less permanent.
+		 Lots of exciting edge cases to worry about. Like the fact that every visual
+		 object currently on the screen needs to listen for hover and dragover
+		 events. These guys are in fact going to be more or less permanent.
 
-		Q: How do we tie the set of actors corresponding to the shape to the shape
-		itself? Well actors and objects are heavily related, so why don't we have the
-		canvas state be a set of records. One for each visual object and one for the
-		canvas itself (we want to be able to zoom and pan the canvas itself, and we
-		need something to listen to clicks and create the constructor objects
-		(special temporary visual objects that exist only to provide visual feedback
-		when making new visual objects.
-*** Questions
-		Should all visual objects be children of the canvas object? Should visual
-		objects have children on their own? It makes perfect sense to represent a
-		rectangle as a line, or as four lines with constraints, but are we trapping
-		ourselves by allowing these relations to be reified in the object model? I
-		think so. My thinking at the moment is that the visual objects should be
-		those things the user explicitely creates. Might it make sense to allow
-		agglomerates? Might it then make sense to have equivalences and dynamic
-		tansformations between equivalents? How would I do that?
+		 Q: How do we tie the set of actors corresponding to the shape to the shape
+		 itself? Well actors and objects are heavily related, so why don't we have the
+		 canvas state be a set of records. One for each visual object and one for the
+		 canvas itself (we want to be able to zoom and pan the canvas itself, and we
+		 need something to listen to clicks and create the constructor objects
+		 (special temporary visual objects that exist only to provide visual feedback
+		 when making new visual objects.
+**** Questions
+		 Should all visual objects be children of the canvas object? Should visual
+		 objects have children on their own? It makes perfect sense to represent a
+		 rectangle as a line, or as four lines with constraints, but are we trapping
+		 ourselves by allowing these relations to be reified in the object model? I
+		 think so. My thinking at the moment is that the visual objects should be
+		 those things the user explicitely creates. Might it make sense to allow
+		 agglomerates? Might it then make sense to have equivalences and dynamic
+		 tansformations between equivalents? How would I do that?
 
-		So what do we do about multiple event listeners and bubbling? I don't know
-		much about these things. I might be getting out of my depth...
-*** Details
-		So we have 3 kinds of visual objects.
+		 So what do we do about multiple event listeners and bubbling? I don't know
+		 much about these things. I might be getting out of my depth...
+**** Details
+		 So we have 3 kinds of visual objects.
 
-		1. The canvas itself
-		2. Constructor objects
-		3. Normal visual objects
+		 1. The canvas itself
+		 2. Constructor objects
+		 3. Normal visual objects
 
-		These can be implemented as records. The UI can extract the draw info out of
-		the records. The records themselves could be responsible for instantiating
-		the drawings with the data. That needs a bit more thought. These records can
-		implement protocols for handling user input. Then we can have a central
-		pub-sub system that notifies all records that implement a given protocol
-		when the associated events come in. I don't see a down side here just yet.
+		 These can be implemented as records. The UI can extract the draw info out of
+		 the records. The records themselves could be responsible for instantiating
+		 the drawings with the data. That needs a bit more thought. These records can
+		 implement protocols for handling user input. Then we can have a central
+		 pub-sub system that notifies all records that implement a given protocol
+		 when the associated events come in. I don't see a down side here just yet.
 
-		The amount of computation involved in a user click could easily grow out of
-		hand as the number of objects subscribing grows. The objects need a
-		knowledge of themselves in space so that they can cheaply decide if an event
-		concerns them. Moreover this proprioception should be exposed so that if it
-		comes to it a higher level dispatch agent can more efficiently decide to
-		whom to send which events. That's an optimisation that we can ignore
-		temporarily.
+		 The amount of computation involved in a user click could easily grow out of
+		 hand as the number of objects subscribing grows. The objects need a
+		 knowledge of themselves in space so that they can cheaply decide if an event
+		 concerns them. Moreover this proprioception should be exposed so that if it
+		 comes to it a higher level dispatch agent can more efficiently decide to
+		 whom to send which events. That's an optimisation that we can ignore
+		 temporarily.
 
-		N.B.: Run a test on this as soon as we can to make sure that scaling isn't
-		completely attrocious. We want this to be usable.
+		 N.B.: Run a test on this as soon as we can to make sure that scaling isn't
+		 completely attrocious. We want this to be usable.
 
-*** Ways to accomplish this
-		This is getting difficult. Who'd have thought that designing what amounts to
-		a ui building ui more or less from scratch would take a lot of thought?
+**** Ways to accomplish this
+		 This is getting difficult. Who'd have thought that designing what amounts to
+		 a ui building ui more or less from scratch would take a lot of thought?
 
-		We have a number of options to represent visual objects. They could be
-		independent actors, they could be nested so that the canvas can be asked for
-		the draw state of everything.
+		 We have a number of options to represent visual objects. They could be
+		 independent actors, they could be nested so that the canvas can be asked for
+		 the draw state of everything.
 
-		So if we make shape schemata functions that take data and return shapes,
-		have specs for shapes, then we should be able to generate said functions
-		pretty trivially.
+		 So if we make shape schemata functions that take data and return shapes,
+		 have specs for shapes, then we should be able to generate said functions
+		 pretty trivially.
 
-		Composition is a problem though. If you have a function that returns a line,
-		and then a compound schema which is a function that returns a compound
-		shape, you can't add another line to the compound schema since it's a
-		function. You rather need to look at what made the function and then add a
-		line to that and then make a new function. In otherwords we need a data
-		representation and generic instantiation.
+		 Composition is a problem though. If you have a function that returns a line,
+		 and then a compound schema which is a function that returns a compound
+		 shape, you can't add another line to the compound schema since it's a
+		 function. You rather need to look at what made the function and then add a
+		 line to that and then make a new function. In otherwords we need a data
+		 representation and generic instantiation.
 
-**** Considerations
-		 - Event bubbling
-			 This has always seemed to me like a sore spot of js and the dom, but we
-			 do need someway to decide which of several overlapping objects gets a
-			 message.
+***** Considerations
+		 	- Event bubbling
+			 	This has always seemed to me like a sore spot of js and the dom, but we
+			 	do need someway to decide which of several overlapping objects gets a
+			 	message.
 
-		 - Extracting the draw state
-			 However we implement visual objects the state of the canvas has to be
-			 directly accessible with minimal coordination.
+		 	- Extracting the draw state
+			 	However we implement visual objects the state of the canvas has to be
+			 	directly accessible with minimal coordination.
 
-		 - Changing values over time
-			 Shapes are immutable. Transformation functions (like affine txs) return
-			 new shapes.
+		 	- Changing values over time
+			 	Shapes are immutable. Transformation functions (like affine txs) return
+			 	new shapes.
 
-			 Visual objects have shapes, but they are much more complicated. If we
-			 store shapes in the visual objects then we have a mutation problem: what
-			 does it mean to grab a widget and drag it to resize a shape? does the
-			 visual object contain a reference to a shape changing over time? That's
-			 one way to do it, but then each object has to keep an undo history and
-			 something global has to order them so that undo and redo operate sanely.
+			 	Visual objects have shapes, but they are much more complicated. If we
+			 	store shapes in the visual objects then we have a mutation problem: what
+			 	does it mean to grab a widget and drag it to resize a shape? does the
+			 	visual object contain a reference to a shape changing over time? That's
+			 	one way to do it, but then each object has to keep an undo history and
+			 	something global has to order them so that undo and redo operate sanely.
 
-			 We could alternately model the canvas as a single immutable composite
-			 shape. Use an event sourcing model like Elm's to take Event -> Shape ->
-			 Shape which would give us a nice functional feel and easy
-			 undo(tree!). Visual objects then would not really be objects, but event
-			 transformers that take a Shape -> DOMEvent -> Maybe Event.
+			 	We could alternately model the canvas as a single immutable composite
+			 	shape. Use an event sourcing model like Elm's to take Event -> Shape ->
+			 	Shape which would give us a nice functional feel and easy
+			 	undo(tree!). Visual objects then would not really be objects, but event
+			 	transformers that take a Shape -> DOMEvent -> Maybe Event.
 
-			 We can use re-frame's event handling logic to handle this. We can also
-			 just keep a list of previous states for undo purposes. Undo granularity
-			 is an eternal problem, but we can figure it out.
+			 	We can use re-frame's event handling logic to handle this. We can also
+			 	just keep a list of previous states for undo purposes. Undo granularity
+			 	is an eternal problem, but we can figure it out.
 
-		 - Time travel debugging
-			 This sounds like it would be useful, but I'm not sure it would
-			 be. Certainly not until the end user starts to create interactive things.
+		 	- Time travel debugging
+			 	This sounds like it would be useful, but I'm not sure it would
+			 	be. Certainly not until the end user starts to create interactive things.
 
-		 - Backtracking / Undo / Redo / Undotree
-			 I'm far from certain that undotree is a useful — read useful as can and
-			 will be used — feature. I saw a really cool gui undotree style browser
-			 history navigation widget in a paper once. That could conceivably bridge
-			 the gap.
+		 	- Backtracking / Undo / Redo / Undotree
+			 	I'm far from certain that undotree is a useful — read useful as can and
+			 	will be used — feature. I saw a really cool gui undotree style browser
+			 	history navigation widget in a paper once. That could conceivably bridge
+			 	the gap.
 
-			 In any case we want effectively unlimited undo/redo.
+			 	In any case we want effectively unlimited undo/redo.
 
-		 - Collaborative editing
-			 It doesn't have to be multi-client, it could just be a bunch of fingers
-			 on a single touch screen, either way it should play nice.
+		 	- Collaborative editing
+			 	It doesn't have to be multi-client, it could just be a bunch of fingers
+			 	on a single touch screen, either way it should play nice.
 
-			 So how would we handle multi-user simultaneous editing? We can't totally
-			 order events, but if we can model shapes as a CRDT then we'd be on
-			 comparatively easy avenue.
+			 	So how would we handle multi-user simultaneous editing? We can't totally
+			 	order events, but if we can model shapes as a CRDT then we'd be on
+			 	comparatively easy avenue.
 
-		 - Instatiation
-			 This is a tricky one. We need two layers of representation for this. We
-			 need data bound shapes, which without data can't be drawn (unless we fake
-			 data, which might be useful for protoyping), and we need the concrete
-			 shapes. A change in the data will generate a new canvas.
+		 	- Instatiation
+			 	This is a tricky one. We need two layers of representation for this. We
+			 	need data bound shapes, which without data can't be drawn (unless we fake
+			 	data, which might be useful for protoyping), and we need the concrete
+			 	shapes. A change in the data will generate a new canvas.
 
-			 If we bind a given piece of user data to a single compound shape, then
-			 composition becomes simple (look at this data vis and that data vis side
-			 by side? No problem). Similarly animations just become streams of shapes
-			 with a framerate.
+			 	If we bind a given piece of user data to a single compound shape, then
+			 	composition becomes simple (look at this data vis and that data vis side
+			 	by side? No problem). Similarly animations just become streams of shapes
+			 	with a framerate.
 
-			 So what's the best way to represent data bound shapes? Maybe something
-			 like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
+			 	So what's the best way to represent data bound shapes? Maybe something
+			 	like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
 
-			 So does this mean that we want shapes to be a subscription from
-			 shapeconstructors / abstract shapes? That would give us the simplest
-			 reactivity...
+			 	So does this mean that we want shapes to be a subscription from
+			 	shapeconstructors / abstract shapes? That would give us the simplest
+			 	reactivity...
 
-			 Keep in mind that we want one unified representation to deal with shapes,
-			 abstract shapes, and shape constructors. Abstract shapes depend on the
-			 data, shape constructors depend on user input, and shapes are just data.
+			 	Keep in mind that we want one unified representation to deal with shapes,
+			 	abstract shapes, and shape constructors. Abstract shapes depend on the
+			 	data, shape constructors depend on user input, and shapes are just data.
 
 ** Levels of Abstraction of Canvas
 	 So we have a stateless wrapper over canvas. This is just a convenience to not
@@ -664,6 +692,10 @@
 	 So what if we just use maps, and then have a multimethod dispatch on the
 	 result of a search for an appropriate renderer? That sounds expensive. But
 	 that's no reason not to try.
+	 
+	 I don't think we want to trap data in records. It makes instantiate and
+	 project a real pain, but more importantly it it going to make ambiguity much
+	 harder to handle.
 * Log
 ** [2017-07-11 Tue 12:20]
 	 Interesting connection: we want to be able to create an object from one
