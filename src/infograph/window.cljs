@@ -63,3 +63,9 @@
   cartesian coordinates through the given window."
   [{z :zoom [ox oy] :origin :as w} [x y]]
   (invert w [(+ (/ x z) ox) (+ (/ y z) oy)]))
+
+(defn pixel-clicked
+  "Returns the coordinates of the pixel clicked on the canvas in a click event."
+  [{[ox oy] :offset :as w} ev]
+  [(- (.-pageX ev) ox) (- (.-pageY ev) oy)])
+
