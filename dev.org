@@ -510,77 +510,77 @@
 		 representation and generic instantiation.
 
 ***** Considerations
-		 	- Event bubbling
-			 	This has always seemed to me like a sore spot of js and the dom, but we
-			 	do need someway to decide which of several overlapping objects gets a
-			 	message.
+			- Event bubbling
+				This has always seemed to me like a sore spot of js and the dom, but we
+				do need someway to decide which of several overlapping objects gets a
+				message.
 
-		 	- Extracting the draw state
-			 	However we implement visual objects the state of the canvas has to be
-			 	directly accessible with minimal coordination.
+			- Extracting the draw state
+				However we implement visual objects the state of the canvas has to be
+				directly accessible with minimal coordination.
 
-		 	- Changing values over time
-			 	Shapes are immutable. Transformation functions (like affine txs) return
-			 	new shapes.
+			- Changing values over time
+				Shapes are immutable. Transformation functions (like affine txs) return
+				new shapes.
 
-			 	Visual objects have shapes, but they are much more complicated. If we
-			 	store shapes in the visual objects then we have a mutation problem: what
-			 	does it mean to grab a widget and drag it to resize a shape? does the
-			 	visual object contain a reference to a shape changing over time? That's
-			 	one way to do it, but then each object has to keep an undo history and
-			 	something global has to order them so that undo and redo operate sanely.
+				Visual objects have shapes, but they are much more complicated. If we
+				store shapes in the visual objects then we have a mutation problem: what
+				does it mean to grab a widget and drag it to resize a shape? does the
+				visual object contain a reference to a shape changing over time? That's
+				one way to do it, but then each object has to keep an undo history and
+				something global has to order them so that undo and redo operate sanely.
 
-			 	We could alternately model the canvas as a single immutable composite
-			 	shape. Use an event sourcing model like Elm's to take Event -> Shape ->
-			 	Shape which would give us a nice functional feel and easy
-			 	undo(tree!). Visual objects then would not really be objects, but event
-			 	transformers that take a Shape -> DOMEvent -> Maybe Event.
+				We could alternately model the canvas as a single immutable composite
+				shape. Use an event sourcing model like Elm's to take Event -> Shape ->
+				Shape which would give us a nice functional feel and easy
+				undo(tree!). Visual objects then would not really be objects, but event
+				transformers that take a Shape -> DOMEvent -> Maybe Event.
 
-			 	We can use re-frame's event handling logic to handle this. We can also
-			 	just keep a list of previous states for undo purposes. Undo granularity
-			 	is an eternal problem, but we can figure it out.
+				We can use re-frame's event handling logic to handle this. We can also
+				just keep a list of previous states for undo purposes. Undo granularity
+				is an eternal problem, but we can figure it out.
 
-		 	- Time travel debugging
-			 	This sounds like it would be useful, but I'm not sure it would
-			 	be. Certainly not until the end user starts to create interactive things.
+			- Time travel debugging
+				This sounds like it would be useful, but I'm not sure it would
+				be. Certainly not until the end user starts to create interactive things.
 
-		 	- Backtracking / Undo / Redo / Undotree
-			 	I'm far from certain that undotree is a useful — read useful as can and
-			 	will be used — feature. I saw a really cool gui undotree style browser
-			 	history navigation widget in a paper once. That could conceivably bridge
-			 	the gap.
+			- Backtracking / Undo / Redo / Undotree
+				I'm far from certain that undotree is a useful — read useful as can and
+				will be used — feature. I saw a really cool gui undotree style browser
+				history navigation widget in a paper once. That could conceivably bridge
+				the gap.
 
-			 	In any case we want effectively unlimited undo/redo.
+				In any case we want effectively unlimited undo/redo.
 
-		 	- Collaborative editing
-			 	It doesn't have to be multi-client, it could just be a bunch of fingers
-			 	on a single touch screen, either way it should play nice.
+			- Collaborative editing
+				It doesn't have to be multi-client, it could just be a bunch of fingers
+				on a single touch screen, either way it should play nice.
 
-			 	So how would we handle multi-user simultaneous editing? We can't totally
-			 	order events, but if we can model shapes as a CRDT then we'd be on
-			 	comparatively easy avenue.
+				So how would we handle multi-user simultaneous editing? We can't totally
+				order events, but if we can model shapes as a CRDT then we'd be on
+				comparatively easy avenue.
 
-		 	- Instatiation
-			 	This is a tricky one. We need two layers of representation for this. We
-			 	need data bound shapes, which without data can't be drawn (unless we fake
-			 	data, which might be useful for protoyping), and we need the concrete
-			 	shapes. A change in the data will generate a new canvas.
+			- Instatiation
+				This is a tricky one. We need two layers of representation for this. We
+				need data bound shapes, which without data can't be drawn (unless we fake
+				data, which might be useful for protoyping), and we need the concrete
+				shapes. A change in the data will generate a new canvas.
 
-			 	If we bind a given piece of user data to a single compound shape, then
-			 	composition becomes simple (look at this data vis and that data vis side
-			 	by side? No problem). Similarly animations just become streams of shapes
-			 	with a framerate.
+				If we bind a given piece of user data to a single compound shape, then
+				composition becomes simple (look at this data vis and that data vis side
+				by side? No problem). Similarly animations just become streams of shapes
+				with a framerate.
 
-			 	So what's the best way to represent data bound shapes? Maybe something
-			 	like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
+				So what's the best way to represent data bound shapes? Maybe something
+				like Data -> Events -> List (AbstractShape | ShapeConstructor) -> Shape?
 
-			 	So does this mean that we want shapes to be a subscription from
-			 	shapeconstructors / abstract shapes? That would give us the simplest
-			 	reactivity...
+				So does this mean that we want shapes to be a subscription from
+				shapeconstructors / abstract shapes? That would give us the simplest
+				reactivity...
 
-			 	Keep in mind that we want one unified representation to deal with shapes,
-			 	abstract shapes, and shape constructors. Abstract shapes depend on the
-			 	data, shape constructors depend on user input, and shapes are just data.
+				Keep in mind that we want one unified representation to deal with shapes,
+				abstract shapes, and shape constructors. Abstract shapes depend on the
+				data, shape constructors depend on user input, and shapes are just data.
 
 ** Levels of Abstraction of Canvas
 	 So we have a stateless wrapper over canvas. This is just a convenience to not
@@ -692,7 +692,7 @@
 	 So what if we just use maps, and then have a multimethod dispatch on the
 	 result of a search for an appropriate renderer? That sounds expensive. But
 	 that's no reason not to try.
-	 
+
 	 I don't think we want to trap data in records. It makes instantiate and
 	 project a real pain, but more importantly it it going to make ambiguity much
 	 harder to handle.
@@ -857,6 +857,9 @@
 	 I've been so tied up figuring out canvas that I haven't actually done
 	 anything regarding dragging data into shapes. There's a lot of work to be
 	 done before the core value of the app exists.
+** TODO Zoom centring
+** TODO Infinite Images
+	 Both infinite in extent and detail.
 * Sketchpad D3
 	Graphical interactive interactive infographic creation.
 
