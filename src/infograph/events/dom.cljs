@@ -74,7 +74,7 @@
 (defmulti event-location (fn [w ev] (classify-event ev)) :default :mouse)
 
 (defmethod event-location :mouse
-  ;; Also covers ;wheel and :click
+  ;; Also covers :wheel and :click
   [w ev]
   (base-location w ev))
 
