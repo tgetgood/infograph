@@ -8,7 +8,10 @@
 ;; TODO: Gather these somewhere else.
 
 (spec/def ::coord
-  (spec/and vector? #(= 2 (count %)) #(every? number? %)))
+  (spec/and vector?
+            #(= 2 (count %))
+            #(every? number? %)
+            #(not (some js/isNaN %))))
 
 (spec/def ::maybe-coord
   (spec/or :nil nil? :coord ::coord))
@@ -64,5 +67,5 @@
                      :height 0}}})
 
 
-(defn db-valid? []
-  (spec/valid? ::db @re-frame.db/app-db))
+(defn spec-db []
+  (spec/explain ::db @re-frame.db/app-db))
