@@ -5,6 +5,10 @@
             [infograph.shapes :as shapes]
             [re-frame.core :as re-frame]))
 
+;;;;; Hacky bits
+
+(def last-draw (atom nil))
+
 (defn q [name]
   (keyword :infograph.events name)) 
 
@@ -25,19 +29,21 @@
  (fn [db [_ mode]]
    (assoc-in db [:canvas :input-mode] mode)))
 
-;; TODO: Listen for window resizing events.
-;; FIXME: This is impure, but where's the right place to access the DOM?
 (re-frame/reg-event-fx
  ::resize-canvas
  (fn [{db :db [_ canvas] :event}]
-   (let [[width height :as dim] (canvas/canvas-container-dimensions)]
-     {:db (update-in db [:canvas :window] assoc :width width :height height)
-      ::resize-canvas! [canvas dim]})))
+   (let [[width height :as dim] (canvas/canvas-container-dimensions)
+         offset (canvas/canvas-container-offset)]
+     (array-map
+      :db (update-in db [:canvas :window] assoc
+                     :width width :height height :offset offset)
+      ::resize-canvas! [canvas dim]
+      ::redraw-canvas! [(canvas/context canvas) @last-draw]))))
 
 (re-frame/reg-event-fx
  ::redraw-canvas
  (fn [{[_ elem content] :event}]
-   (let [ctx (-> elem canvas/context)]
+   (let [ctx (canvas/context elem)]
      {::redraw-canvas! [ctx content]})))
 
 (re-frame/reg-event-fx
@@ -105,6 +111,6 @@
     (re-frame/subscribe [:inst-data])
     (re-frame/subscribe [:window])])
  (fn [[canvas data window]]
-   (-> canvas
-       (shapes/instantiate data)
-       (shapes/project window))))
+   (reset! last-draw (-> canvas
+                         (shapes/instantiate data)
+                         (shapes/project window)))))

@@ -6,6 +6,9 @@
             [infograph.views :as views]
             [infograph.config :as config]))
 
+(defn clear-window-resize-listener! []
+  (set! (.-onresize js/window) nil))
+
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
@@ -13,6 +16,7 @@
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
+  (clear-window-resize-listener!)
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 
