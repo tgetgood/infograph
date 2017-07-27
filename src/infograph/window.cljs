@@ -8,39 +8,6 @@
   [{h :height} [x y]]
   [x (- h y)])
 
-(defn- zoom-factor
-  [dz]
-  (let [base 2.718
-        stretch 100]
-    (js/Math.pow base (/ dz stretch))))
-
-(defn- adjust-origin
-  "Given an origin, a centre of zoom and a zoom scale, return the new
-  origin."
-  [{[x y] :origin :as w} [zx zy] dz]
-  (let [delta (zoom-factor dz)]
-    (assoc w :origin [(* (- zx x) delta) (* (- zy y) delta)])))
-
-(defn- adjust-zoom
-  "Reducing function for zoom events. Currently just an exponential."
-  [z dz]
-  (/ z (zoom-factor dz)))
-
-(defn zoom-window
-  "Returns a new window map accounting for zoom factor z centred at location
-  zc."
-  [w dz zc]
-  (-> w
-      ;; FIXME: Deal with zoom centring later.
-      #_(adjust-origin zc dz)
-      (update :zoom adjust-zoom dz)))
-
-(defn pan-window
-  "Returns a new window panned by vector v"
-  [w v]
-  ;; (.log js/console (:origin w) v (mapv + (:origin w) v))
-  (update w :origin #(mapv + % v)))
-
 (defn on-screen?
   "Returns true if the point [x y] is in the given window. The window is assumed
   to include its boundaries."
@@ -70,3 +37,40 @@
   [{[ox oy] :offset :as w} ev]
   (invert w [(- (.-pageX ev) ox) (- (.-pageY ev) oy)]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Pan and Zoom
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- zoom-factor
+  [dz]
+  (let [base 2.718
+        stretch 100]
+    (js/Math.pow base (/ dz stretch))))
+
+(defn- adjust-origin
+  "Given an origin, a centre of zoom and a zoom scale, return the new
+  origin."
+  [{[x y] :origin :as w} dz zc]
+  (let [delta (zoom-factor dz)
+        [zx zy] (coproject w zc)]
+  (.log js/console [x y] delta [zx zy] (coproject w zc))
+  (assoc w :origin [(* zx delta) (* zy delta)])))
+
+(defn- adjust-zoom
+  "Reducing function for zoom events. Currently just an exponential."
+  [z dz]
+  (/ z (zoom-factor dz)))
+
+(defn zoom-window
+  "Returns a new window map accounting for zoom factor z centred at location
+  zc."
+  [w dz zc]
+  (-> w
+      ;; FIXME: Deal with zoom centring later.
+      (adjust-origin dz zc)
+      (update :zoom adjust-zoom dz)))
+
+(defn pan-window
+  "Returns a new window panned by vector v"
+  [w v]
+  (update w :origin #(mapv + % v)))
