@@ -38,7 +38,8 @@
 (defn pan-window
   "Returns a new window panned by vector v"
   [w v]
-  (update w :origin (partial mapv + v)))
+  ;; (.log js/console (:origin w) v (mapv + (:origin w) v))
+  (update w :origin #(mapv + % v)))
 
 (defn on-screen?
   "Returns true if the point [x y] is in the given window. The window is assumed
@@ -62,10 +63,10 @@
   "Inverse of projection. Converts pixel coordinates into corresponding
   cartesian coordinates through the given window."
   [{z :zoom [ox oy] :origin :as w} [x y]]
-  (invert w [(+ (/ x z) ox) (+ (/ y z) oy)]))
+  [(+ (/ x z) ox) (+ (/ y z) oy)])
 
 (defn pixel-clicked
   "Returns the coordinates of the pixel clicked on the canvas in a click event."
   [{[ox oy] :offset :as w} ev]
-  [(- (.-pageX ev) ox) (- (.-pageY ev) oy)])
+  (invert w [(- (.-pageX ev) ox) (- (.-pageY ev) oy)]))
 

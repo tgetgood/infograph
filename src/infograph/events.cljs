@@ -46,12 +46,6 @@
    (let [ctx (canvas/context elem)]
      {::redraw-canvas! [ctx content]})))
 
-(re-frame/reg-event-fx
- ::dom-event
- (fn [{[_ evt val] :event}]
-   (let [evs (dom-events/get-handlers evt)]
-     {:dispatch-n (map (fn [k] [k val]) evs)})))
-
 ;;;;; FX
  
 (re-frame/reg-fx

@@ -23,26 +23,9 @@
   (set! (.-width canvas) width)
   (set! (.-height canvas) height))
 
-;; FIXME:
-;; The following might be more appropriately placed in the infograph.events.dom
-;; ns. infograph.window? We probably need a new set of concerns to deal with thss
-
-(defn drag-location [e]
-  [(.-pageX e) (.-pageY e)])
-
-(defn click-location [e]
-  ;;HACK: We really need to pass in the canvas...
-  (let [c (js/document.getElementById "the-canvas")
-        h (.-clientHeight c)]
-    [(- (.-pageX e) (.-offsetLeft c))
-     (- h (- (.-pageY e) (.-offsetTop c)))]))
-
-(defn touch-location [e]
-  (when-let [t (aget (.-touches e) 0)]
-    (click-location t)))
-
-(defn analyse-zoom [ev]
-  [(click-location ev) (.-deltaY ev)])
+(defn canvas-container-offset []
+  (let [c (canvas-container)]
+    [(.-offsetLeft c) (.-offsetTop c)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Canvas Wrapper
