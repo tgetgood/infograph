@@ -48,7 +48,8 @@
     (js/Math.pow base (/ dz stretch))))
 
 (defn coord-adjust [x o z dz]
-  (/ (+ (* x dz) (* o z)) (+ z dz)))
+  ;; FIXME: Uncentred
+  (* dz o))
 
 (defn- adjust-origin
   "Given an origin, a centre of zoom and a zoom scale, return the new
