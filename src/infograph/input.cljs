@@ -1,5 +1,6 @@
 (ns infograph.input
   (:require [infograph.css :as css]
+            [infograph.window :as window]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
 
@@ -18,9 +19,10 @@
   (into [] (take 4 (repeat nice-map))))
 
 (defn property-window []
-  (let [drag-position (re-frame/subscribe [:drag-position])]
+  (let [drag-position (re-frame/subscribe [:drag-position])
+        w (re-frame/subscribe [:window])]
     (fn []
-      (let [[x y] @drag-position]
+      (let [[x y] (window/project @w @drag-position)]
         [:div {:style {:position "absolute"
                        :top y
                        :left x}}

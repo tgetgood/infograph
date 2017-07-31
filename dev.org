@@ -850,7 +850,7 @@
 ** TODO Clean up this file
 	 So much rambling thought process. Need to go through the whole thing and
 	 consolidate.
-** TODO Event inversion
+** DONE Event inversion
 	 Need to inversely project events into the cartesian plane so that clicking,
 	 dragging, etc., act on the things being clicked, dragged, etc..
 ** TODO Dynamism
