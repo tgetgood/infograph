@@ -34,7 +34,10 @@
    :q (c-point [:strokes 0 :current])})
 
 (defn rectangle-constructor [p]
-  #_(base/Rectangle. {} p (value [:strokes 0 :current])))
+  {:type :rectangle
+   :style {}
+   :p (point p)
+   :q (c-point [:strokes 0 :current])})
 
 (defn circle-constructor [c]
   {:type :circle
