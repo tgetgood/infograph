@@ -1,6 +1,6 @@
 (ns infograph.events.dom
   (:require [clojure.string :as string]
-            [infograph.canvas :as canvas]
+            [infograph.locator :as locator]
             [infograph.shapes :as shapes]
             [infograph.window :as window]
             [re-frame.core :as re-frame]))
@@ -22,6 +22,7 @@
    :touch-move  "touchmove"
    :touch-end   "touchend"
    :drag-over   "dragover"
+   :drag-end     "dragend"
    :drop        "drop"})
 
 (def events-js->clj
@@ -50,7 +51,7 @@
     [:mouse-move :touch-move]  [::move]
     [:mouse-up :touch-end]     [::stroke-end]
     [:click]                   [::click]
-    [:drop]                    [::drop]
+    [:drop :drag-end]                    [::drop]
     [:drag-over]               [::drag]
     [:wheel]                   [::zoom]}))
 
@@ -85,17 +86,26 @@
 
 (defmethod event-location :drag-over
   [w ev]
-  (window/coproject w [(.-pageX ev) (.-pageY ev)]))
+  (window/invert w (window/coproject w [(.-pageX ev) (.-pageY ev)])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Events
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-event-db
+ ::drop
+ (fn [db [_ ev]]
+   (.log js/console "drop")
+   #_(let [shapes (get-in db [:canvas :shape :shapes])
+         w (get-in db [:canvas :window])
+         loc (event-location w ev)]
+     (.log js/console (map #(locator/dist % loc) shapes)))))
+
+(re-frame/reg-event-db
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     #_(.log js/console (window/coproject w (event-location w ev)))
+     (.log js/console (window/coproject w (event-location w ev)))
      db)))
 
 (re-frame/reg-event-db
