@@ -1,7 +1,8 @@
 (ns infograph.shapes.constructors
-  (:require [infograph.shapes.impl
-             :refer [ComputationSchema SubSchema ValueSchema Coordinate-2D Scalar]
-             :as impl]))
+  (:require [infograph.geometry :refer [norm]]
+            [infograph.shapes.impl
+             :refer
+             [ComputationSchema Coordinate-2D Scalar SubSchema ValueSchema]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; DSL
@@ -21,18 +22,6 @@
 
 (defn c-point [query]
   (computation query point))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Geometry
-;; TODO: Eventually collect this stuff.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn norm
-  [[x1 y1] [x2 y2]]
-  (when (and x1 x2 y1 y2)
-    (let [x (- x2 x1)
-          y (- y2 y1)]
-      (js/Math.sqrt (+ (* x x) (* y y))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; GUI Constructors
