@@ -20,7 +20,7 @@
   window w."
   [{[ox oy] :origin z :zoom :as w} [x y]]
   (when (and (number? x) (number? y))
-    (invert w [(* (- x ox) z) (* (- y oy) z)])))
+    [(* (- x ox) z) (* (- y oy) z)]))
 
 (defn project-scalar
   [{z :zoom} s]
@@ -35,7 +35,7 @@
 (defn pixel-clicked
   "Returns the coordinates of the pixel clicked on the canvas in a click event."
   [{[ox oy] :offset :as w} ev]
-  (invert w [(- (.-pageX ev) ox) (- (.-pageY ev) oy)]))
+  [(- (.-pageX ev) ox) (- (.-pageY ev) oy)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Pan and Zoom
