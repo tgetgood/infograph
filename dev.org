@@ -7,14 +7,14 @@
 		The origin of the canvas should be a point in space, not the upper left
 		corner. It should also default to the lower left corner so as to infuriate
 		CG veterans. Do we want axes or is that just silly? I want axes. Is that
-		sufficient reason?
+		sufficient reason? Maybe even a full grid.
 *** Moving the Canvas
 		Draging and zooming should move the canvas around as if it were a map.
 
 		Interactive infographics (those not exported to pngs, gifs, etc.) should be
 		able to pan and zoom as well if the author desires since this can allow
 		exploration of far more data than is possibile in a fixed size. Lazy
-		rendering can allow images to be effectively infinite in scale, detail, or
+		rendering can allow images to be effectively infinite in extent, detail, or
 		both. I feel this will open up whole worlds of pedagogical value.
 
 		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
@@ -116,7 +116,7 @@
 		problem before we render complete nonsense and apologise profusely to the
 		user. This is hardly ideal. Perhaps we can specify fallback strategies,
 		allow properties to be marked as optional. But then how do we assure
-		ourselves that the graphic will still make sense when fields are ommitted?
+		ourselves that the graphic will still make sense when fields are omitted?
 
 		Problem: what if the data is structurally correct, but the example data is
 		unrepresentative in some way? E.g. all of the values for x in the example
