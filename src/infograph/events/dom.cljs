@@ -71,7 +71,7 @@
   (event-map evt))
 
 (defn base-location [w ev]
-  (window/invert w (window/coproject w (window/pixel-clicked w ev))))
+  (window/coproject w (window/invert w (window/pixel-clicked w ev))))
 
 (defmulti event-location (fn [w ev] (classify-event ev)) :default :mouse)
 
@@ -90,7 +90,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- scale-dist [w l1 l2]
-  (mapv - (window/coproject w l1) (window/coproject w l2)))
+  (mapv - (window/coproject w l1)
+        (window/coproject w l2)))
 
 (defn- in-stroke? [db]
   (and (nil? (get-in db [:input :strokes 0 :end]))
@@ -123,9 +124,7 @@
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     (.log js/console
-           (window/invert w (window/pixel-clicked w ev))
-           (event-location w ev))
+     (.log js/console (event-location w ev))
      db)))
 
 (re-frame/reg-event-db

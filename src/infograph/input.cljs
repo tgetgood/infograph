@@ -24,9 +24,8 @@
     (fn []
       (let [[x y] (window/project @w @drag-position)
             [ox oy] (:offset @w)]
-        (.log js/console @drag-position [x y] [ox oy])
         [:div {:style {:position "absolute"
-                       :bottom (+ 10 y)
+                       :bottom y
                        :left (+ ox (- x 10))}}
          "Test-dropper"]))))
 
