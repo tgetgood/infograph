@@ -70,7 +70,7 @@
 (extend-protocol Projectable
   Coordinate-2D
   (project [this w]
-    (window/project w [(.-x this) (.-y this)]))
+    (window/invert w (window/project w [(.-x this) (.-y this)])))
 
   Scalar
   (project [this w]

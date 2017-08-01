@@ -71,7 +71,7 @@
   (event-map evt))
 
 (defn base-location [w ev]
-  (window/coproject w (window/pixel-clicked w ev)))
+  (window/invert w (window/coproject w (window/pixel-clicked w ev))))
 
 (defmulti event-location (fn [w ev] (classify-event ev)) :default :mouse)
 
@@ -84,14 +84,6 @@
   [w ev]
   (when-let [tev (aget (.-touches ev) 0)]
     (base-location w tev)))
-
-(defmethod event-location :drag-over
-  [w ev]
-  (base-location w ev))
-
-(defmethod event-location :drop
-  [w ev]
-  (base-location w ev))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Util
@@ -113,7 +105,7 @@
  ::drop
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     (.log js/console (event-location w ev)))
+     #_(.log js/console (event-location w ev)))
    db
    #_(let [shapes (get-in db [:canvas :shape :shapes])
          w (get-in db [:canvas :window])
@@ -131,7 +123,9 @@
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     (.log js/console (event-location w ev) (window/coproject w (window/project w (event-location w ev))))
+     (.log js/console
+           (window/invert w (window/pixel-clicked w ev))
+           (event-location w ev))
      db)))
 
 (re-frame/reg-event-db
@@ -149,7 +143,7 @@
    (let [mode (get-in db [:canvas :input-mode])
          w (get-in db [:canvas :window])]
      (if (= mode :grab)
-       (let [loc (window/pixel-clicked w ev)
+       (let [loc (window/invert w (window/pixel-clicked w ev))
              old (get-in db [:input :strokes 0 :current])]
          (cond-> (assoc-in db [:input :strokes 0 :current] loc)
            (and old (in-stroke? db))

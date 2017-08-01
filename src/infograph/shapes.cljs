@@ -47,7 +47,7 @@
 
 (defmethod draw! :line
   [ctx {:keys [style p q]}]
-  (when q
+  (when-not (some nil? q)
     (canvas/line ctx style p q)))
 
 (defmethod draw! :frame
