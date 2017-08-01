@@ -47,6 +47,8 @@
 
 (defn canvas-panel [drawing]
   [:div {:id "canvas-container"
+         :on-drag-over #(.preventDefault %)
+         :on-drag-enter #(.preventDefault %)
          :style {:width "100%"
                  :height "100%"
                  :overflow "hidden"}}

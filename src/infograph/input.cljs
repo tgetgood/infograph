@@ -22,10 +22,11 @@
   (let [drag-position (re-frame/subscribe [:drag-position])
         w (re-frame/subscribe [:window])]
     (fn []
-      (let [[x y] (window/project @w @drag-position)]
+      (let [[x y] (window/project @w @drag-position)
+            [ox oy] (:offset @w)]
         [:div {:style {:position "absolute"
-                       :top y
-                       :left x}}
+                       :top (+ oy 10 y)
+                       :left (+ ox (- x 10))}}
          "Test-dropper"]))))
 
 ;; colour stolen from klipse

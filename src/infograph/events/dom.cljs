@@ -22,7 +22,8 @@
    :touch-move  "touchmove"
    :touch-end   "touchend"
    :drag-over   "dragover"
-   :drag-end     "dragend"
+   :drag-end    "dragend"
+   :drag-enter  "dragenter"
    :drop        "drop"})
 
 (def events-js->clj
@@ -51,7 +52,7 @@
     [:mouse-move :touch-move]  [::move]
     [:mouse-up :touch-end]     [::stroke-end]
     [:click]                   [::click]
-    [:drop :drag-end]                    [::drop]
+    [:drop :drag-end]          [::drop]
     [:drag-over]               [::drag]
     [:wheel]                   [::zoom]}))
 
@@ -70,7 +71,7 @@
   (event-map evt))
 
 (defn base-location [w ev]
-  (window/pixel-clicked w ev))
+  (window/coproject w (window/pixel-clicked w ev)))
 
 (defmulti event-location (fn [w ev] (classify-event ev)) :default :mouse)
 
@@ -86,7 +87,23 @@
 
 (defmethod event-location :drag-over
   [w ev]
-  (window/invert w (window/coproject w [(.-pageX ev) (.-pageY ev)])))
+  (base-location w ev))
+
+(defmethod event-location :drop
+  [w ev]
+  (base-location w ev))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Util
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- scale-dist [w l1 l2]
+  (mapv - (window/coproject w l1) (window/coproject w l2)))
+
+(defn- in-stroke? [db]
+  (and (nil? (get-in db [:input :strokes 0 :end]))
+       (not (nil? (get-in db [:input :strokes 0 :current])))
+       (not (nil? (get-in db [:input :strokes 0 :start])))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Events
@@ -95,17 +112,26 @@
 (re-frame/reg-event-db
  ::drop
  (fn [db [_ ev]]
-   (.log js/console "drop")
+   (let [w (get-in db [:canvas :window])]
+     (.log js/console (event-location w ev)))
+   db
    #_(let [shapes (get-in db [:canvas :shape :shapes])
          w (get-in db [:canvas :window])
          loc (event-location w ev)]
      (.log js/console (map #(locator/dist % loc) shapes)))))
 
 (re-frame/reg-event-db
+ ::drag
+ (fn [db [_ ev]]
+   (let [w (get-in db [:canvas :window])
+         loc (event-location w ev)]
+     (assoc-in db [:input :drag-position] loc))))
+
+(re-frame/reg-event-db
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     (.log js/console (window/coproject w (event-location w ev)))
+     (.log js/console (event-location w ev) (window/coproject w (window/project w (event-location w ev))))
      db)))
 
 (re-frame/reg-event-db
@@ -118,40 +144,26 @@
          (update-in [:canvas :window] window/zoom-window dz zc)))))
 
 (re-frame/reg-event-db
- ::drag
- (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])
-         loc (event-location w ev)]
-     (assoc-in db [:input :drag-position] loc))))
-
-(defn- in-stroke? [db]
-  (and (nil? (get-in db [:input :strokes 0 :end]))
-       (not (nil? (get-in db [:input :strokes 0 :current])))
-       (not (nil? (get-in db [:input :strokes 0 :start])))))
-
-(defn- scale-dist [w l1 l2]
-  (mapv - (window/coproject w l1) (window/coproject w l2)))
-
-(re-frame/reg-event-db
  ::move
  (fn [db [_  ev]]
    (let [mode (get-in db [:canvas :input-mode])
-         w (get-in db [:canvas :window])
-         loc (event-location w ev)
-         old (get-in db [:input :strokes 0 :current])]
+         w (get-in db [:canvas :window])]
      (if (= mode :grab)
-       (cond-> (assoc-in db [:input :strokes 0 :current] loc)
-         (and old (in-stroke? db))
-         (update-in [:canvas :window] window/pan-window
-                    (scale-dist w old loc)))
-       (assoc-in db [:input :strokes 0 :current] (window/coproject w loc)))))) 
+       (let [loc (window/pixel-clicked w ev)
+             old (get-in db [:input :strokes 0 :current])]
+         (cond-> (assoc-in db [:input :strokes 0 :current] loc)
+           (and old (in-stroke? db))
+           (update-in [:canvas :window] window/pan-window
+                      (scale-dist w old loc))))
+       (let [loc (event-location w ev)]
+         (assoc-in db [:input :strokes 0 :current] loc)))))) 
 
 (re-frame/reg-event-db
  ::stroke-start
  (fn [db [_ ev]]
    (let [mode (get-in db [:canvas :input-mode])
          w (get-in db [:canvas :window])
-         loc (window/coproject w (event-location w ev))]
+         loc (event-location w ev)]
      (let [constructor (get shapes/construction-map mode)]
        (cond-> (assoc-in db [:input :strokes 0] {:start loc})
          (not= mode :grab)
@@ -162,7 +174,7 @@
  (fn [db [_ ev]]
    (let [mode (get-in db [:canvas :input-mode])
          w (get-in db [:canvas :window])
-         loc (window/coproject w (event-location w ev))]
+         loc (event-location w ev)]
      (cond-> (assoc-in db [:input :strokes 0 :end] loc)
        (not= mode :grab)
        (update-in [:canvas :shape] shapes/instantiate db)))))
@@ -178,8 +190,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- handler [ev]
-  (.preventDefault ev)
   (.persist ev)
+  (.preventDefault ev)
   (let [evtype (events-js->clj (.-type ev))]
     (re-frame/dispatch [::dom-event evtype ev])))
 
