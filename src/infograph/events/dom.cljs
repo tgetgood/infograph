@@ -105,13 +105,14 @@
 (re-frame/reg-event-db
  ::drop
  (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])]
-     #_(.log js/console (event-location w ev)))
-   db
-   #_(let [shapes (get-in db [:canvas :shape :shapes])
-         w (get-in db [:canvas :window])
+   (let [w (get-in db [:canvas :window])
+         shapes (shapes/project
+                 (shapes/instantiate (get-in db [:canvas :shape :shapes]) db)
+                 w)
          loc (event-location w ev)]
-     (.log js/console (map #(locator/dist % loc) shapes)))))
+     (.log js/console loc shapes)
+     (.log js/console (mapv #(locator/dist % loc) shapes)))
+   db))
 
 (re-frame/reg-event-db
  ::drag
@@ -124,7 +125,7 @@
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
-     (.log js/console (event-location w ev))
+     #_(.log js/console (event-location w ev))
      db)))
 
 (re-frame/reg-event-db
