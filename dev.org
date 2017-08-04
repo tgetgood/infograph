@@ -2,13 +2,98 @@
 #+STARTUP:nologdone
 
 * Intention
-** Desires
-*** Explicit origin
-		The origin of the canvas should be a point in space, not the upper left
-		corner. It should also default to the lower left corner so as to infuriate
-		CG veterans. Do we want axes or is that just silly? I want axes. Is that
-		sufficient reason? Maybe even a full grid.
+** Summary
+	 The goals of this project are hard to summarise because they're continually
+	 growing and changing, overreaching all reasonable scope and being pruned back
+	 again.
+
+	 The core idea is a new way to create UIs by *drawing* them. It's not a visual
+	 programming language in the normal sense of visually laying out the control,
+	 or data flow, but rather the desire is to be able to create a fully
+	 functional spa with what are normally considered "design tools".
+
+	 This is first and foremost an experiment. An experiment in UI design, AI, and
+	 HCI. I will take no assumptions for granted and intentionally defy existing
+	 norms whereever I find them to be counterproductive, confusing, or just not
+	 especially helpful.
+** Examples That Should Work Out of the Box
+*** Heat map
+		Array of values, or objects with a single value, x and y coords are
+		functions of index and colour function of value.
+
+		Or array of objects with x, y, v props.
+
+		Or matrix representation of single values.
+*** Pie Chart
+*** Histogram
+*** Graphs (i.e. plots)
+*** Graphs (i.e. network graphs)
+*** Mandelbrot Set
+		Or other fractal patterns
+*** Lazy loading of infinite data
+		Presumably via AJAX
+
+* Work
+** Unsorted Ideas
+	 Ideas that I've jotted down, but haven't thought through and inserted into
+	 the backlog yet.
+** Next Ideas
+	 Roster of all ideas I've had regarding this project. Roughly sorted by
+	 importance in a purely subjective fashion.
+
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+*** Infinite Images
+		Images should be able to span the entirety of Euclidean space since only
+		that part that fits into the current window needs to be rendered.
+
+		Particularly useful here would be axes or grid lines.
+
+		To accomplish this, I would need both an encoding for things of infinite
+		length — for grid lines I can use +/-infinity, but for an infinite diagonal,
+		we need a different represntation — and another layer of indirection — or
+		maybe just an addition to the projection step — to cast these infinite data
+		structures into things that won't crash the browser.
+*** Inifinite detail
+		Images should be able to contain subimages of arbitrary complexity and
+		depth. This will allow the rendering of fractals and recursive patterns. In
+		principle there's nothing preventing it since only finitely many things can
+		appear on the screen (there are only finitely many pixels).
+
+		Using a lazy rendering approach images smaller than a certain size don't
+		need to render subimages.
+
+		Much more difficult is the scenario where an infinite number of images cover
+		the screen. After some point there will just be black pixels everywhere and
+		the rendering can stop, but how can we tell?
+
+		Is the second aspect useful? The first certainly is.
+**** Uses
+		 - Mandlebrot set
+		 - Hopf bifurcations
+		 - Escherian infinite regress tiling
+		 - Anything not a fractal?
+*** Constraint Based Properties
+		It should be possible to specify properties as functions of other
+		properties. e.g. enforce a square is square by setting h = w, calculating
+		the endpoints of a line to fall on two dynamic circles, etc..
+
+		But we are also going to need genuine constraint based programming for
+		things like making sure circles can't overlap, that the line connecting two
+		circles is as short as possible. and so on.
+
+		That's not so hard from a CS point of view, but I haven't looked at this
+		stuff since undergrad, so it's going to take a good chunk of work.
 *** Moving the Canvas
+		- Note taken on [2017-08-04 Fri 10:17] \\
+			Panning currently works as desired. Zoom works, but the cursor doesn't
+			stay centred when zooming as desired. This is just because I haven't sat
+			down and done the math. Not my top priority though at the moment.
 		Draging and zooming should move the canvas around as if it were a map.
 
 		Interactive infographics (those not exported to pngs, gifs, etc.) should be
@@ -20,19 +105,6 @@
 		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
 		friend graph (that would require more than a little data magic but I'm sure
 		somebody will get a kick out of making a library for it).
-*** Basic vector drawing widgets
-		Line, square, bezier cubic, circle, elipse, etc..
-
-		Free drawing should be allowed but we need some kind of constraint
-		satisfaction engine before we can force a free drawing to adhere to changing
-		data.
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
-		dimensions of the data.
-
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,
@@ -59,10 +131,12 @@
 		if the user just quickly drops the data without waiting for the menu then
 		bind it to the first entry (most likely guess).
 *** Code Adjustments
-		Sometimes you want more precision than a mouse offers. For this you should
-		be able to open the property list of an object and manually change the
-		values. Handy would be editing widgets a la Victor's magical editor from the
-		talk on principles.
+		Sometimes you want more precision than a mouse offers. Or you have exact
+		mockups (though this is supposed to remove the need for mockups). For this
+		you should be able to open the property list of an object and manually
+		change the values. Handy would be editing widgets a la Victor's magical
+		editor from the talk on principles. Would those actually be handy or just
+		candy?
 
 		This will likely also be the only viable way to set constraints between
 		properties and data or to use compound data. E.g. you want a rectangle whose
@@ -90,19 +164,6 @@
 		provide a drag and drop interface from the data into the visual field. This
 		is much easier than the next point since it only goes one way. The data is
 		give and the image is generated from it. Just like a frame in react.
-*** Duality of Drawing Code
-		The code that draws the shapes the user sees should be open to inspection
-		and modification. This is a whole other can of worms that I'd rather not
-		open at the moment but I do want to pursue this. Likely as next project.
-*** Simple Model of User Interaction
-		Steal a note from Elm and model user interation as just another data
-		stream. How far can I take this? Obviously what I want is a programming
-		environment that makes handling users clicking, draging, mousing around,
-		just the same as it handles drawing a rectangle and making its length
-		correspond to some property in data that you'll get from a server at
-		runtime.
-
-		Will I get there? Who knows? but that's no reason not to try.
 *** Testability
 		I want these infographics to be truly dynamic. That means that you have an
 		example of the kind of data you're going to get, but in the real world you
@@ -150,31 +211,72 @@
 		negative", but there are always assumptions at the bottom.
 
 		So what if the renderer can learn to improvise? Then I get rich?
-** Examples That Should Work Out of the Box
-*** Heat map
-		Array of values, or objects with a single value, x and y coords are
-		functions of index and colour function of value.
+*** Leaning from aggregate use
+		Wouldn't it be swell if the platform could detect that you're defining
+		something equivalent, or nearly so, to something that it's seen before and
+		present you with the other option? This would both aid discovery and help
+		reduce the number of reinvented wheels. The duplication of effort, and the 6
+		80% done libraries doing X (for all X) that is both lisp's blessing and its
+		curse could perhaps be mitigated. Genuinely new ideas can be traced back to
+		the things they evolved from, and rediscoveries can be merged or pruned away
+		over time.
+*** Duality of Drawing Code
+		The code that draws the shapes the user sees should be open to inspection
+		and modification. This is a whole other can of worms that I'd rather not
+		open at the moment but I do want to pursue this. Likely as next project.
+*** Allow visual objects to respond to user input
+		It should be possible to specify properties of vos that respond to the user
+		clicking, mousing around, etc..
+** Current
+*** Property windows for shapes
+		I've been so tied up figuring out canvas that I haven't actually done
+		anything regarding dragging data into shapes. There's a lot of work to be
+		done before the core value of the app exists.
 
-		Or array of objects with x, y, v props.
+		Every shape should determine (a series of) tables which lay out its
+		properties.
+*** Drag data to properties
+		Data fields dragged into properties should set Schema values on those
+		properties.
 
-		Or matrix representation of single values.
-*** Pie Chart
-*** Histogram
-*** Graphs (i.e. plots)
-*** Graphs (i.e. network graphs)
-*** Mandelbrot Set
-		Or other fractal patterns
-*** Lazy loading of infinite data
-		Presumably via AJAX
-***
-** Priorities
-	 1. Shape Data Model
-	 2. Data Data Model
-	 3. Canvas
-	 4. Data Vis
-	 5. Connections
-	 6. Code like editing
+		There also needs to be a way to set a computation based on a data value.
+*** Pixel distances
+		The current Euclidean distances are nice mathematically, but as we zoom the
+		image they make the distances vary in a non intuitive way for the user. If I
+		drag something a pixel from something else, I mean that thing, It shouldn't
+		matter if that pixel corresponds to a distance of 1000, or 0.001.
+** Done
+*** Clean up this file
+		So much rambling thought process. Need to go through the whole thing and
+		consolidate.
+*** Event inversion
+		Need to inversely project events into the cartesian plane so that clicking,
+		dragging, etc., act on the things being clicked, dragged, etc..
 
+*** Explicit origin
+		The origin of the canvas should be a point in space, not the upper left
+		corner. It should also default to the lower left corner so as to infuriate
+		CG veterans. Do we want axes or is that just silly? I want axes. Is that
+		sufficient reason? Maybe even a full grid.
+*** Basic vector drawing widgets
+		Line, square, bezier cubic, circle, elipse, etc..
+
+		Free drawing should be allowed but we need some kind of constraint
+		satisfaction engine before we can force a free drawing to adhere to changing
+		data.
+*** Simple Model of User Interaction
+		- Note taken on [2017-08-04 Fri 10:49] \\
+			User interactions are modeled identically to designer interactions. I think the
+			basic idea of how to do this is well established, but I don't yet know what to
+			do with it.
+		Steal a note from Elm and model user interation as just another data
+		stream. How far can I take this? Obviously what I want is a programming
+		environment that makes handling users clicking, draging, mousing around,
+		just the same as it handles drawing a rectangle and making its length
+		correspond to some property in data that you'll get from a server at
+		runtime.
+
+		Will I get there? Who knows? but that's no reason not to try.
 * Notes
 ** Shapes
 	 The representation of shapes is actually a bit tricky. Mostly because there
@@ -697,6 +799,48 @@
 	 project a real pain, but more importantly it it going to make ambiguity much
 	 harder to handle.
 * Log
+** Sketchpad D3
+	 Graphical interactive interactive infographic creation.
+
+	 Thinking about this as I walked to the market I got pretty excited. This is
+	 such a simple demo of the basic idea with a clear and obvious use case for
+	 lots and lots of people.
+
+	 Two panels: code on the left and a drawing tool on the right. Don't start
+	 with free drawing, it's too messy and people won't use it for a lot of
+	 things. We can get really far with line, rectangle, circle and ellipse.
+
+	 Data will have a structure, so drag properties from your data (presumably the
+	 objects) to the properties of the things you drew (lengths, colours, labels,
+	 angles, whatever) to connect them. Now you can instantiate multiple objects
+	 from you drawn prototype. Of course we need some kind of validation on the
+	 incoming data, but we can probably generate specs given specs on the shapes
+	 and the user entered connections!
+
+	 Arrays of things either represent a sequence in time, a sequence in space, or
+	 a bag that should be a set but is a vector because people just do that all
+	 too often. Or it's a struct with implicitely ordered fields, but let's
+	 pretend we never thought of that.
+
+	 So say the user has a vector of things. They can choose to either treat those
+	 things as a sequence in time (frames in an animation, for instance). or as
+	 things arranged in space. That arrangement in space is infinitely flexible
+	 and up to the user's skills as an artist. Basic examples would be a
+	 histogram, a pie chart, widgets for countries superimposed on a map, cells in
+	 the game of life, a link analysis graph. The link graph is interesting
+	 because those are notoriously finnicky, and we are going to need some kind of
+	 constraint solver to make it reasonable (the nodes can't overlap, the angles
+	 between edges on a node should endeavour to be equal, that kind of thing).
+
+	 To deal with heterogenous lists we should be able to put switches into the
+	 processing that analyse each thing and draw the correct image for it. That's
+	 obvious in retrospect, but then what isn't?
+
+	 Let's go back to that dual representation of objects as finished unto
+	 themselves, and as affine transformations of normalised objects. That would
+	 let us effect the position and orientation of shapes as well as their own
+	 properties. But the duality will let you completely ignore the affine aspect
+	 unless you want to use it.
 ** [2017-07-11 Tue 12:20]
 	 Interesting connection: we want to be able to create an object from one
 	 member of a list and then create a compound by iterating over the list and
@@ -845,60 +989,3 @@
 	 so far as I've thought about them — are primarily visual, so they can still
 	 be transparent to the designer even if the implementation is horrifyingly
 	 complex.
-
-* TODOs
-** TODO Clean up this file
-	 So much rambling thought process. Need to go through the whole thing and
-	 consolidate.
-** DONE Event inversion
-	 Need to inversely project events into the cartesian plane so that clicking,
-	 dragging, etc., act on the things being clicked, dragged, etc..
-** TODO Dynamism
-	 I've been so tied up figuring out canvas that I haven't actually done
-	 anything regarding dragging data into shapes. There's a lot of work to be
-	 done before the core value of the app exists.
-** TODO Zoom centring
-** TODO Infinite Images
-	 Both infinite in extent and detail.
-* Sketchpad D3
-	Graphical interactive interactive infographic creation.
-
-	Thinking about this as I walked to the market I got pretty excited. This is
-	such a simple demo of the basic idea with a clear and obvious use case for
-	lots and lots of people.
-
-	Two panels: code on the left and a drawing tool on the right. Don't start
-	with free drawing, it's too messy and people won't use it for a lot of
-	things. We can get really far with line, rectangle, circle and ellipse.
-
-	Data will have a structure, so drag properties from your data (presumably the
-	objects) to the properties of the things you drew (lengths, colours, labels,
-	angles, whatever) to connect them. Now you can instantiate multiple objects
-	from you drawn prototype. Of course we need some kind of validation on the
-	incoming data, but we can probably generate specs given specs on the shapes
-	and the user entered connections!.
-
-	Arrays of things either represent a sequence in time, a sequence in space, or
-	a bag that should be a set but is a vector because people just do that all
-	too often. Or it's a struct with implicitely ordered fields, but let's
-	pretend we never thought of that.
-
-	So say the user has a vector of things. They can choose to either treat those
-	things as a sequence in time (frames in an animation, for instance). or as
-	things arranged in space. That arrangement in space is infinitely flexible
-	and up to the user's skills as an artist. Basic examples would be a
-	histogram, a pie chart, widgets for countries superimposed on a map, cells in
-	the game of life, a link analysis graph. The link graph is interesting
-	because those are notoriously finnicky, and we are going to need some kind of
-	constraint solver to make it reasonable (the nodes can't overlap, the angles
-	between edges on a node should endeavour to be equal, that kind of thing).
-
-	To deal with heterogenous lists we should be able to put switches into the
-	processing that analyse each thing and draw the correct image for it. That's
-	obvious in retrospect, but then what isn't?
-
-	Let's go back to that dual representation of objects as finished unto
-	themselves, and as affine transformations of normalised objects. That would
-	let us effect the position and orientation of shapes as well as their own
-	properties. But the duality will let you completely ignore the affine aspect
-	unless you want to use it.
