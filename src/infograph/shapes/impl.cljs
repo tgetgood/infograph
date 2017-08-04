@@ -34,6 +34,11 @@
   transformed to pixel coordinates via linear (affine?) projection."
   (project [this window]))
 
+(defprotocol IValue
+  "Records that have a concrete value but need types for other kinds of
+  polymorphism, can express that value here."
+  (value [this]))
+
 ;;; Generic Implementations
 
 (extend-recursive-tx Instantiable instantiate)
@@ -64,14 +69,23 @@
 
 ;;; Projectables
 
-(defrecord Coordinate-2D [x y])
-(defrecord Scalar [v])
+(extend-protocol IValue
+  default
+  (value [this] this))
 
-(extend-protocol Projectable
-  Coordinate-2D
-  (project [this w]
-    (window/invert w (window/project w [(.-x this) (.-y this)])))
+(defrecord Coordinate-2D [x y]
+  Projectable
+  (project [_ w]
+    (window/invert w (window/project w [x y])))
 
-  Scalar
-  (project [this w]
-    (window/project-scalar w (.-v this))))
+  IValue
+  (value [_] [x y]))
+
+(defrecord Scalar [v]
+  Projectable
+  (project [_ w]
+    (window/project-scalar w v))
+
+  IValue
+  (value [_] v))
+

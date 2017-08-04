@@ -1,9 +1,9 @@
 (ns infograph.locator
   (:require [infograph.geometry :refer [norm]]
-            [infograph.shapes :as shape]))
+            [infograph.shapes :as shapes]))
 
 (defn classify [shape point]
-  (shape/classify shape))
+  (shapes/classify shape))
 
 (defmulti dist classify)
 
@@ -16,6 +16,6 @@
 
 (defmethod dist :circle
   [{:keys [c r]} p]
-  (let [d (norm p c)]
-    (js/Math.abs (- r d))))
+  (let [d (norm p (shapes/value c))]
+    (js/Math.abs (- (shapes/value r)  d))))
 

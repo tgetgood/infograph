@@ -76,4 +76,5 @@
 
 (def instantiate impl/instantiate)
 (def project impl/project)
+(def value impl/value)
 
