@@ -106,12 +106,8 @@
  ::drop
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])
-         shapes (shapes/project
-                 (shapes/instantiate (get-in db [:canvas :shape :shapes]) db)
-                 w)
-         loc (event-location w ev)]
-     (.log js/console loc shapes)
-     (.log js/console (mapv #(locator/dist % loc) shapes)))
+         shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) db)
+         loc (event-location w ev)])
    db))
 
 (re-frame/reg-event-db
