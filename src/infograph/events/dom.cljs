@@ -108,6 +108,7 @@
    (let [w (get-in db [:canvas :window])
          shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) db)
          loc (event-location w ev)])
+   (.log js/console "droppted canvas")
    db))
 
 (re-frame/reg-event-db

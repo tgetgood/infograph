@@ -36,8 +36,7 @@
 ;;;;; Drawing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn classify [x]
-  (:type x))
+(defn classify [x] (:type x))
 
 (defmulti draw! (fn [ctx shape] (classify shape)))
 
@@ -77,4 +76,3 @@
 (def instantiate impl/instantiate)
 (def project impl/project)
 (def value impl/value)
-

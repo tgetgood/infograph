@@ -37,6 +37,12 @@
 ** Unsorted Ideas
 	 Ideas that I've jotted down, but haven't thought through and inserted into
 	 the backlog yet.
+*** Very Lazy Rendering
+		When dealing with on screen logic, we should be able to filter the vo model
+		so that only shapes that actually appear in the current window even need to
+		be processed for events, properties, &c.. This is technically an
+		optimisation, but if things start to grind to a halt, we know why.
+*** New colour scheme for data and properties
 ** Next Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
@@ -105,6 +111,14 @@
 		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
 		friend graph (that would require more than a little data magic but I'm sure
 		somebody will get a kick out of making a library for it).
+*** Unified Ambiguous Shapes
+		Shapes can be represented in many ways. Don't choose one and enforce that on
+		the user. Learn to deal with diversity and ambiguity (ambiguity because you
+		don't always know what circle means, you know a bunch of things circle could
+		mean and there's always the chance they're all wrong.
+
+		This is critical, but I'm still not sure how to do it, so it's not at the
+		top of the list.
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,

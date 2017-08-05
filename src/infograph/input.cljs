@@ -1,5 +1,6 @@
 (ns infograph.input
   (:require [infograph.css :as css]
+            [infograph.locator :as locator]
             [infograph.window :as window]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
@@ -18,18 +19,54 @@
 (def nice-vec
   (into [] (take 4 (repeat nice-map))))
 
+(defn- table-row [[k v]]
+  [:tr
+   [:td [:span k]]
+   [:td
+    [:div {:on-drag-over #(.preventDefault %)
+           :on-drop #(js/console.log "dropped table")}
+     v]]])
+
+(defn map->table [m]
+  `[:table
+    [:thead
+     [:tr
+      [:th [:span "Property"]]
+      [:th [:span "Value"]]]]
+    [:tbody
+     ~@(map table-row m)]])
+
+;; TODO: Unified shape classification system.
+(defn- classify [s] (:type s))
+
+(defmulti properties classify)
+
+(defmethod properties :circle
+  [s]
+  (map->table (select-keys s [:c :r])))
+
+(defn nearest-shape [{:keys [shapes]} loc]
+  (->> shapes
+       (map (fn [s] [(locator/dist s loc) s]))
+       (sort-by first)
+       first))
+
 (defn property-window []
   (let [drag-position (re-frame/subscribe [:drag-position])
+        canvas (re-frame/subscribe [:r2-canvas])
         w (re-frame/subscribe [:window])]
     (fn []
-      (let [[x y] (window/project @w @drag-position)
+      (let [[x y :as loc] (window/project @w @drag-position)
+            [d s] (nearest-shape @canvas loc)
             [ox oy] (:offset @w)]
-        [:div {:style {:position "absolute"
-                       :bottom y
-                       :left (+ ox (- x 10))}}
-         "Test-dropper"]))))
+        (if (and d (< d 10))
+          [:div {:style {:position "absolute"
+                         :bottom (- y 100)
+                         :left (+ ox (- x 10))}}
+           [properties s]]
+          [:div {:style {:display :none}}])))))
 
-;; colour stolen from klipse
+;; Colours stolen from klipse:
 ;;
 ;; brackets #997
 ;; string #a11
@@ -62,7 +99,7 @@
   [x p]
   (let [open? (reagent/atom false)]
     (fn [x p]
-      [:div 
+      [:div
        [:span {:style {:color "#164"}
                :draggable true
                :on-drag-start (partial drag-start p)
@@ -90,7 +127,7 @@
   [x p]
   ;; TODO: Keys. What am I going to use, UUIDs? The input data is more or less
   ;; static at the moment, so this hack isn't so bad...'
-  `[:div 
+  `[:div
     [:span {:style {:color "#997"}} "["]
     ~@(map-indexed (fn [i x] [render x (conj p i)]) x)
     [:span {:style {:color "#997"}} "]"]])

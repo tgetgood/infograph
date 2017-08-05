@@ -10,7 +10,7 @@
 (def last-draw (atom nil))
 
 (defn q [name]
-  (keyword :infograph.events name)) 
+  (keyword :infograph.events name))
 
 ;;;;; Events
 
@@ -47,7 +47,7 @@
      {::redraw-canvas! [ctx content]})))
 
 ;;;;; FX
- 
+
 (re-frame/reg-fx
  ::redraw-canvas!
  (fn [[ctx content]]
@@ -99,12 +99,17 @@
    (get-in db [:canvas :window])))
 
 (re-frame/reg-sub
- :canvas
+ :r2-canvas
  (fn [_ _]
    [(re-frame/subscribe [:canvas-raw])
-    (re-frame/subscribe [:inst-data])
+    (re-frame/subscribe [:inst-data])])
+ (fn [[canvas data]]
+   (shapes/instantiate canvas data)))
+
+(re-frame/reg-sub
+ :canvas
+ (fn [_ _]
+   [(re-frame/subscribe [:r2-canvas])
     (re-frame/subscribe [:window])])
- (fn [[canvas data window]]
-   (reset! last-draw (-> canvas
-                         (shapes/instantiate data)
-                         (shapes/project window)))))
+ (fn [[canvas window]]
+   (reset! last-draw (shapes/project canvas window))))
