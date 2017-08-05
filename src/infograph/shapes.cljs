@@ -49,6 +49,11 @@
   (when-not (some nil? q)
     (canvas/line ctx style p q)))
 
+(defmethod draw! :rectangle
+  [ctx {:keys [style p q]}]
+  (when-not (some nil? q)
+    (canvas/rectangle ctx style p q)))
+
 (defmethod draw! :frame
   [ctx {:keys [shapes]}]
   (canvas/clear ctx)
