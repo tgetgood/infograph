@@ -242,15 +242,6 @@
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
 ** Current
-*** Pixel distances
-		The current Euclidean distances are nice mathematically, but as we zoom the
-		image they make the distances vary in a non intuitive way for the user. If I
-		drag something a pixel from something else, I mean that thing, It shouldn't
-		matter if that pixel corresponds to a distance of 1000, or 0.001.
-
-		Bumped up because this will actually simplify a lot of the geometry logic.
-
-		Working now in a basic way, but doesn't play along with moving the canvas.
 *** Property windows for shapes
 		I've been so tied up figuring out canvas that I haven't actually done
 		anything regarding dragging data into shapes. There's a lot of work to be
@@ -270,6 +261,17 @@
 
 		There also needs to be a way to set a computation based on a data value.
 ** Done
+*** Pixel distances
+		The current Euclidean distances are nice mathematically, but as we zoom the
+		image they make the distances vary in a non intuitive way for the user. If I
+		drag something a pixel from something else, I mean that thing, It shouldn't
+		matter if that pixel corresponds to a distance of 1000, or 0.001.
+
+		Bumped up because this will actually simplify a lot of the geometry logic.
+
+		Working now in a basic way, but doesn't play along with moving the canvas.
+
+		I was projecting the drag position...
 *** Clean up this file
 		So much rambling thought process. Need to go through the whole thing and
 		consolidate.

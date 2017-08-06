@@ -64,7 +64,7 @@
         w (re-frame/subscribe [:window])]
     (fn []
       (when @drag-position
-        (let [[x y :as loc] (window/project @w @drag-position)
+        (let [[x y :as loc] @drag-position
               [d s] (nearest-shape @canvas loc)
               [ox oy] (:offset @w)]
           (if (and d (< d 10))
