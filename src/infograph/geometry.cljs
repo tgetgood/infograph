@@ -1,5 +1,19 @@
 (ns infograph.geometry
-  "Geometric Utilities.")
+    "Geometric Utilities.")
+
+;;;; Extending arithmetic operators to handle vectors.
+
+(defn v+ [p q]
+  (mapv + p q))
+
+(defn v- [p q]
+  (mapv - p q))
+
+(defn v*
+  "Returns scalar multiplication of a*v"
+  [a v]
+  (when (and (number? a) (vector? v))
+    (mapv (partial * a) v)))
 
 (defn dot
   "Returns the Euclidean inner product of p and q."
@@ -13,12 +27,10 @@
   (when v
     (js/Math.sqrt (dot v v))))
 
-;; REVIEW: It feels like implementing addition on vectors for this would be bad
-;; form, but it would also be so clean looking...
-(defn sub [[x1 y1] [x2 y2]]
-  [(- x1 x2) (- y1 y2)])
 
 (defn dist
   "Returns the distance between p and q in R^n"
   [p q]
-  (norm (sub q p)))
+  (if (and p q)
+    (norm (v- q p))
+    js/Infinity))
