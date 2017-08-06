@@ -25,7 +25,7 @@
    [:td
     [:div {:on-drag-over #(.preventDefault %)
            :on-drop #(js/console.log "dropped table")}
-     v]]])
+     (str v)]]])
 
 (defn map->table [m]
   `[:table
@@ -39,11 +39,18 @@
 ;; TODO: Unified shape classification system.
 (defn- classify [s] (:type s))
 
-(defmulti properties classify)
+(defmulti shape-properties classify)
 
-(defmethod properties :circle
+(defmethod shape-properties :circle
   [s]
-  (map->table (select-keys s [:c :r])))
+  (select-keys s [:c :r]))
+
+(defmethod shape-properties :line
+  [s]
+  (select-keys s [:p :q]))
+
+(defn properties [s]
+  [map->table (shape-properties s)])
 
 (defn nearest-shape [{:keys [shapes]} loc]
   (->> shapes
@@ -53,18 +60,20 @@
 
 (defn property-window []
   (let [drag-position (re-frame/subscribe [:drag-position])
-        canvas (re-frame/subscribe [:r2-canvas])
+        canvas (re-frame/subscribe [:canvas])
         w (re-frame/subscribe [:window])]
     (fn []
-      (let [[x y :as loc] (window/project @w @drag-position)
-            [d s] (nearest-shape @canvas loc)
-            [ox oy] (:offset @w)]
-        (if (and d (< d 10))
-          [:div {:style {:position "absolute"
-                         :bottom (- y 100)
-                         :left (+ ox (- x 10))}}
-           [properties s]]
-          [:div {:style {:display :none}}])))))
+      (when @drag-position
+        (let [[x y :as loc] (window/project @w @drag-position)
+              [d s] (nearest-shape @canvas loc)
+              [ox oy] (:offset @w)]
+          (if (and d (< d 10))
+            [:div {:style {:position "absolute"
+                           :backgroundColor "rgba(255,255,255,0.8)"
+                           :top (+ y 20)
+                           :left (+ ox x)}}
+             [properties s]]
+            [:div {:style {:display :none}}]))))))
 
 ;; Colours stolen from klipse:
 ;;

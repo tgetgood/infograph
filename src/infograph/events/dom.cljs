@@ -85,6 +85,11 @@
   (when-let [tev (aget (.-touches ev) 0)]
     (base-location w tev)))
 
+(defmethod event-location :drag-over
+  [w ev]
+  ;; Dragging is dealt with in pixel distance.
+  (window/pixel-clicked w ev))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Util
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

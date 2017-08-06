@@ -1,5 +1,5 @@
 (ns infograph.shapes.constructors
-  (:require [infograph.geometry :refer [norm]]
+  (:require [infograph.geometry :as geometry]
             [infograph.shapes.impl
              :refer
              [ComputationSchema Coordinate-2D Scalar SubSchema ValueSchema]]))
@@ -43,7 +43,7 @@
   {:type :circle
    :style {}
    :c (point c)
-   :r (computation [:strokes 0 :current] #(Scalar. (norm c %)))})
+   :r (computation [:strokes 0 :current] #(Scalar. (geometry/dist c %)))})
 
 ;;;;; Dev cruft
 

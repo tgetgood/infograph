@@ -27,7 +27,6 @@
   (when v
     (js/Math.sqrt (dot v v))))
 
-
 (defn dist
   "Returns the distance between p and q in R^n"
   [p q]
