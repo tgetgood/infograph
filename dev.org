@@ -242,6 +242,15 @@
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
 ** Current
+*** Pixel distances
+		The current Euclidean distances are nice mathematically, but as we zoom the
+		image they make the distances vary in a non intuitive way for the user. If I
+		drag something a pixel from something else, I mean that thing, It shouldn't
+		matter if that pixel corresponds to a distance of 1000, or 0.001.
+
+		Bumped up because this will actually simplify a lot of the geometry logic.
+
+		Working now in a basic way, but doesn't play along with moving the canvas.
 *** Property windows for shapes
 		I've been so tied up figuring out canvas that I haven't actually done
 		anything regarding dragging data into shapes. There's a lot of work to be
@@ -249,16 +258,17 @@
 
 		Every shape should determine (a series of) tables which lay out its
 		properties.
+
+		These are again tied up with ambiguity in shapes. They need to be able to
+		represent a point as a pair or as individual coordinates, they need to know
+		that lines have length, and endpoints, but that they aren't
+		independent. Most importantly these classes need to be open to extension by
+		the designer at runtime.
 *** Drag data to properties
 		Data fields dragged into properties should set Schema values on those
 		properties.
 
 		There also needs to be a way to set a computation based on a data value.
-*** Pixel distances
-		The current Euclidean distances are nice mathematically, but as we zoom the
-		image they make the distances vary in a non intuitive way for the user. If I
-		drag something a pixel from something else, I mean that thing, It shouldn't
-		matter if that pixel corresponds to a distance of 1000, or 0.001.
 ** Done
 *** Clean up this file
 		So much rambling thought process. Need to go through the whole thing and
