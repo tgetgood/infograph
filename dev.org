@@ -111,6 +111,9 @@
 		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
 		friend graph (that would require more than a little data magic but I'm sure
 		somebody will get a kick out of making a library for it).
+*** Drag hover highlighting in property windows
+		We need to indicate clearly what will be effected on drop. Highlighting the
+		candidate to be replaced seems like a good solution.
 *** Unified Ambiguous Shapes
 		Shapes can be represented in many ways. Don't choose one and enforce that on
 		the user. Learn to deal with diversity and ambiguity (ambiguity because you
@@ -225,6 +228,16 @@
 		negative", but there are always assumptions at the bottom.
 
 		So what if the renderer can learn to improvise? Then I get rich?
+*** Shape UUIDs
+		Right now compound shapes contain a set of subshapes. Shapes are then
+		references to themselves in this bag. With immutability this seems good
+		enough for now, but something keeps nagging atthe back of my mind telling me
+		to replace this by maps from uuids to shapes. Is this just my imperatively
+		trained past sneaking up on me? If we use UUIDs then wouldn't we need to
+		change the UUID every time the shape changes? And then we'd be exactly where
+		we are with sets, no?
+		
+		I need to sort this out one way or another.
 *** Leaning from aggregate use
 		Wouldn't it be swell if the platform could detect that you're defining
 		something equivalent, or nearly so, to something that it's seen before and
@@ -1015,3 +1028,19 @@
 	 so far as I've thought about them — are primarily visual, so they can still
 	 be transparent to the designer even if the implementation is horrifyingly
 	 complex.
+** [2017-08-09 Wed 15:08]
+	 Nearly have dragging data to properties working. Two realisations that need
+	 to be dealt with before this can be properly considered done:
+	 
+	 1. Sets of Shapes won't do
+			We can't transform the elements inside sets via assoc, or any other
+      builtin that I know of. The only options I see immediately are either
+      disj, modify, conj which is going to be really awkward, or replace the
+      sets with maps. The keys could be the values, or they could be UUIDs, I
+      don't know that it matters.
+
+	 2. Instantiation
+			If we try to query the shape data by value then we need to pass the
+      uninstantiated data into the query builder otherwise it won't match the
+      actual app data.
+			

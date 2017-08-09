@@ -46,6 +46,16 @@
    (let [ctx (canvas/context elem)]
      {::redraw-canvas! [ctx content]})))
 
+;;; User Input Events
+
+(re-frame/reg-event-db
+ ::property-drop
+ (fn [db [_ drop-path query-path]]
+   (.log js/console drop-path query-path
+         (get-in (get-in db [:canvas :shapes]) query-path))
+   (update-in db [:canvas :shape]
+              assoc-in query-path (shapes/connection drop-path))))
+
 ;;;;; FX
 
 (re-frame/reg-fx

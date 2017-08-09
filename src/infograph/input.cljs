@@ -1,7 +1,8 @@
 (ns infograph.input
-  (:require [infograph.css :as css]
+  (:require [cljs.reader :refer [read-string]]
+            [infograph.css :as css]
             [infograph.locator :as locator]
-            [infograph.window :as window]
+            [infograph.shapes :as shapes]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
 
@@ -19,22 +20,56 @@
 (def nice-vec
   (into [] (take 4 (repeat nice-map))))
 
-(defn- table-row [[k v]]
+(defprotocol ValueRender
+  (render-value [this query]))
+
+(defn- receive-drop [query-path ev]
+  (let [drop-path (read-string
+                   (.getData (.-dataTransfer ev) "path"))]
+    (re-frame/dispatch [:infograph.events/property-drop drop-path query-path])))
+
+(defn value-dropper [v q]
+  [:div {:on-drag-over #(.preventDefault %)
+         ;; stopPropagation? Probably
+         ;; TODO: Drag hover effects
+         :on-drop (partial receive-drop q)}
+   (str v)])
+
+(extend-protocol ValueRender
+  default
+  (render-value [this path]
+    (value-dropper this path))
+
+  infograph.shapes.impl/Coordinate-2D
+  (render-value [{:keys [x y]} q]
+    [:table {:on-drag-over #(.preventDefault %)
+             :on-drop (partial receive-drop q)}
+
+     [:tbody
+      [:tr
+       [:td [:span "x"]]
+       [:td (value-dropper x (conj q :x))]]
+      [:tr
+       [:td [:span "y"]]
+       [:td (value-dropper y (conj q :y))]]]])
+
+  infograph.shapes.impl/Scalar
+  (render-value [this q]
+    (value-dropper (:v this) (conj q :v))))
+
+(defn- table-row [[k v] q]
   [:tr
    [:td [:span k]]
-   [:td
-    [:div {:on-drag-over #(.preventDefault %)
-           :on-drop #(js/console.log "dropped table")}
-     (str v)]]])
+   [:td (render-value v q)]])
 
-(defn map->table [m]
+(defn map->table [m q]
   `[:table
     [:thead
      [:tr
       [:th [:span "Property"]]
       [:th [:span "Value"]]]]
     [:tbody
-     ~@(map table-row m)]])
+     ~@(map #(table-row % q) m)]])
 
 ;; TODO: Unified shape classification system.
 (defn- classify [s] (:type s))
@@ -49,30 +84,30 @@
   [s]
   (select-keys s [:p :q]))
 
-(defn properties [s]
-  [map->table (shape-properties s)])
-
-(defn nearest-shape [{:keys [shapes]} loc]
+(defn nearest-shape [w {:keys [shapes]} loc]
   (->> shapes
-       (map (fn [s] [(locator/dist s loc) s]))
+       (map (fn [s] [(locator/dist (shapes/project s w) loc) s]))
        (sort-by first)
        first))
 
 (defn property-window []
   (let [drag-position (re-frame/subscribe [:drag-position])
-        canvas (re-frame/subscribe [:canvas])
+        canvas (re-frame/subscribe [:r2-canvas])
         w (re-frame/subscribe [:window])]
     (fn []
       (when @drag-position
         (let [[x y :as loc] @drag-position
-              [d s] (nearest-shape @canvas loc)
+              [d s] (nearest-shape @w @canvas loc)
               [ox oy] (:offset @w)]
-          (if (and d (< d 10))
+          (if (and d (< d 20))
             [:div {:style {:position "absolute"
                            :backgroundColor "rgba(255,255,255,0.8)"
                            :top (+ y 20)
                            :left (+ ox x)}}
-             [properties s]]
+             ;;FIXME: We're going to have to pass in the uninstantiated shape
+             ;;since that's the shape in the main app db that we're querying
+             ;;against.
+             [map->table (shape-properties s) [:shapes s]]]
             [:div {:style {:display :none}}]))))))
 
 ;; Colours stolen from klipse:

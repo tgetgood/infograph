@@ -1,8 +1,7 @@
 (ns infograph.shapes
   (:require [infograph.canvas :as canvas]
             [infograph.shapes.constructors :as constructors]
-            [infograph.shapes.impl :as impl]
-            [infograph.window :as window]))
+            [infograph.shapes.impl :as impl]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Normalisation
@@ -68,6 +67,16 @@
   ;; to worry about calculating them explicitely.
   (doseq [shape shapes]
     (draw! ctx shape)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Data Relation Creation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- cursor [x]
+  (impl/SubSchema. [:data] x))
+
+(defn connection [q] 
+  (cursor (impl/ValueSchema. q)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; External API to Shapes

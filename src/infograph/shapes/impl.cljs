@@ -78,6 +78,7 @@
   (project [_ w]
     (window/invert w (window/project w [x y])))
 
+  ;; TODO: Instantiable
   IValue
   (value [_] [x y]))
 
