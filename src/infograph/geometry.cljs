@@ -18,8 +18,8 @@
 (defn dot
   "Returns the Euclidean inner product of p and q."
   [p q]
-  {:pre [(every? #(and (number? %) (not (js/isNaN %))) (concat p q))]}
-  (reduce + (map * p q)))
+  (when(every? #(and (number? %) (not (js/isNaN %))) (concat p q))
+    (reduce + (map * p q))))
 
 (defn norm
   "Returns the norm (length) of vector v in Euclidean space."
