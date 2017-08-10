@@ -43,6 +43,14 @@
 		be processed for events, properties, &c.. This is technically an
 		optimisation, but if things start to grind to a halt, we know why.
 *** New colour scheme for data and properties
+*** Drag points to points
+		Maybe we should be able to drag the points at the edges of lines into one
+		another to force them to be the same.
+*** Infer desired property
+		From the type of data we might be able to guess what it's being dragged
+		to. If we can and the user drops immediately just do it.
+
+		I think this is redundant with an idea somewhere else.
 ** Next Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
@@ -236,7 +244,7 @@
 		trained past sneaking up on me? If we use UUIDs then wouldn't we need to
 		change the UUID every time the shape changes? And then we'd be exactly where
 		we are with sets, no?
-		
+
 		I need to sort this out one way or another.
 *** Leaning from aggregate use
 		Wouldn't it be swell if the platform could detect that you're defining
@@ -1031,16 +1039,15 @@
 ** [2017-08-09 Wed 15:08]
 	 Nearly have dragging data to properties working. Two realisations that need
 	 to be dealt with before this can be properly considered done:
-	 
+
 	 1. Sets of Shapes won't do
 			We can't transform the elements inside sets via assoc, or any other
-      builtin that I know of. The only options I see immediately are either
-      disj, modify, conj which is going to be really awkward, or replace the
-      sets with maps. The keys could be the values, or they could be UUIDs, I
-      don't know that it matters.
+			builtin that I know of. The only options I see immediately are either
+			disj, modify, conj which is going to be really awkward, or replace the
+			sets with maps. The keys could be the values, or they could be UUIDs, I
+			don't know that it matters.
 
 	 2. Instantiation
 			If we try to query the shape data by value then we need to pass the
-      uninstantiated data into the query builder otherwise it won't match the
-      actual app data.
-			
+			uninstantiated data into the query builder otherwise it won't match the
+			actual app data.

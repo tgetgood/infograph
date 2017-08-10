@@ -60,7 +60,7 @@
 (defn- table-row [[k v] q]
   [:tr
    [:td [:span k]]
-   [:td (render-value v q)]])
+   [:td (render-value v (conj q k))]])
 
 (defn map->table [m q]
   `[:table

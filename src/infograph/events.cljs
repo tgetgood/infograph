@@ -48,13 +48,27 @@
 
 ;;; User Input Events
 
+;; HACK: If this works out we should definitely use records and implement
+;; IAssociative
+(defn hack-assoc [coll k v]
+  (if (satisfies? cljs.core/IAssociative coll)
+    (assoc coll k v)
+    (if (set? coll)
+      (-> coll (disj k) (conj v)))))
+
+(defn hack-assoc-in [coll [k & ks] v]
+  (if ks
+    (hack-assoc coll k (hack-assoc-in (get coll k) ks v))
+    (hack-assoc coll k v)))
+
 (re-frame/reg-event-db
  ::property-drop
  (fn [db [_ drop-path query-path]]
    (.log js/console drop-path query-path
+         (get-in db [:canvas :shape :shapes])
          (get-in (get-in db [:canvas :shapes]) query-path))
    (update-in db [:canvas :shape]
-              assoc-in query-path (shapes/connection drop-path))))
+              hack-assoc-in query-path (shapes/connection drop-path))))
 
 ;;;;; FX
 
