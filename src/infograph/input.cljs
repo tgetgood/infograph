@@ -11,14 +11,14 @@
    :stuff [{:a 5} {:a 6}]
    :other '(false true 3 "sssasd" true)})
 
-(def nice-map
-  {:x 234
-   :y 1093
-   :length 12
+(defn nice-map []
+  {:x (rand-int 500)
+   :y (rand-int 1000)
+   :length (rand-int 20 200)
    :label "I'm a something"})
 
 (def nice-vec
-  (into [] (take 4 (repeat nice-map))))
+  (into [] (take 4 (repeatedly nice-map))))
 
 (defprotocol ValueRender
   (render-value [this] [this query]))
@@ -100,6 +100,10 @@
   (select-keys s [:c :r]))
 
 (defmethod shape-properties :line
+  [s]
+  (select-keys s [:p :q]))
+
+(defmethod shape-properties :rectangle
   [s]
   (select-keys s [:p :q]))
 
