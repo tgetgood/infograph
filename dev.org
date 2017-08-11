@@ -53,6 +53,9 @@
 		I think this is redundant with an idea somewhere else.
 *** Prettier property windows
 		Not a priority for the proof of concept, but boy are they ugly.
+*** Smarter (More Mathematical) Distance Calculation
+		Distances between things in space is an obvious natural transformation. So
+		instead of having different specialised dist fns unify them.
 ** Bugs
 *** Origin isn't on default canvas
 		The canvas thinks that (0,0) is the bottom left corner, but that corner is
@@ -68,7 +71,48 @@
 ** Next Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
+*** Multiple Representations of Shapes
+		Most shapes can be represented in an open ended number of ways. One of the
+		fundamental propositions of this tool is that it shouldn't matter which
+		representation data is given in, it should be manipulable in any other.
 
+		A general way to store and translate between multiple representations is
+		critical to infograph. I'm already seeing where I need it to make a simple
+		histogram: the drawing widgets represent rectangles by the diagonal line
+		which is natural enough, but in any histogram context we want to isolate and
+		manipulate the width and height of the rectangle, not the diagonal.
+*** Graphical Adjustments
+		Every aspect of a shape you see should be adjustable in place just like
+		illustrator et al.. drag control points on bezier curves, drag lengths,
+		click centres to choose colour, gradient, etc.. The stroke types themselves
+		should be adjustable as such, but I'm not sure how to accomplish that
+		graphically.
+
+		Dragging a data value into a point, line, etc. should link the data to the
+		property in question. The problem of course is that pointing is ambiguous
+		and easily misinterpreted. Data parsing and typing will solve some of the
+		problems: colours set colour, strings set string properties, lengths must be
+		numbers, pairs of numbers might be coordinates. But the ambiguity is still
+		there: a number dragged onto a line might be the length, its width, it might
+		be the angle to the origin, it might be the x or y translation, it might be
+		a label (but not very likely), so how do we disambiguate in an intuitive
+		manner?
+
+		Each shape will have a list of properties, so if you drag the data over and
+		wait a split second, a little property list can pop up and you drag the data
+		to the correct one. This will be especially useful when the x and y
+		coordinates of a point are different paths in the data for instance. If by
+		the nature of the data and the properties we can make an educated guess as
+		to what the user means, then we should order the properties accordingly and
+		if the user just quickly drops the data without waiting for the menu then
+		bind it to the first entry (most likely guess).
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Infinite Images
 		Images should be able to span the entirety of Euclidean space since only
 		that part that fits into the current window needs to be rendered.
@@ -80,7 +124,7 @@
 		we need a different represntation — and another layer of indirection — or
 		maybe just an addition to the projection step — to cast these infinite data
 		structures into things that won't crash the browser.
-*** Inifinite detail
+*** Inifinite Detail
 		Images should be able to contain subimages of arbitrary complexity and
 		depth. This will allow the rendering of fractals and recursive patterns. In
 		principle there's nothing preventing it since only finitely many things can
@@ -137,31 +181,6 @@
 
 		This is critical, but I'm still not sure how to do it, so it's not at the
 		top of the list.
-*** Graphical Adjustments
-		Every aspect of a shape you see should be adjustable in place just like
-		illustrator et al.. drag control points on bezier curves, drag lengths,
-		click centres to choose colour, gradient, etc.. The stroke types themselves
-		should be adjustable as such, but I'm not sure how to accomplish that
-		graphically.
-
-		Dragging a data value into a point, line, etc. should link the data to the
-		property in question. The problem of course is that pointing is ambiguous
-		and easily misinterpreted. Data parsing and typing will solve some of the
-		problems: colours set colour, strings set string properties, lengths must be
-		numbers, pairs of numbers might be coordinates. But the ambiguity is still
-		there: a number dragged onto a line might be the length, its width, it might
-		be the angle to the origin, it might be the x or y translation, it might be
-		a label (but not very likely), so how do we disambiguate in an intuitive
-		manner?
-
-		Each shape will have a list of properties, so if you drag the data over and
-		wait a split second, a little property list can pop up and you drag the data
-		to the correct one. This will be especially useful when the x and y
-		coordinates of a point are different paths in the data for instance. If by
-		the nature of the data and the properties we can make an educated guess as
-		to what the user means, then we should order the properties accordingly and
-		if the user just quickly drops the data without waiting for the menu then
-		bind it to the first entry (most likely guess).
 *** Code Adjustments
 		Sometimes you want more precision than a mouse offers. Or you have exact
 		mockups (though this is supposed to remove the need for mockups). For this
@@ -270,13 +289,15 @@
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
 ** Current
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
-		dimensions of the data.
+*** Complex Data Tree Rendering
+		Currently complex data is just rendered as a humongous list. That won't
+		do. Lists and objects need to collapse, the user should be able to focus on
+		individual objects in lists or properties in objects as they see fit.
 
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+		I'm bumping this up because we really need to be able to focus on individual
+		bits of data before spatial iteration or temporal animations make sense.
+*** Real dataset
+		Get some real data to play with. Something to graph would be ideal.
 ** Done
 *** Property windows for shapes
 		I've been so tied up figuring out canvas that I haven't actually done
@@ -862,6 +883,22 @@
 	 I don't think we want to trap data in records. It makes instantiate and
 	 project a real pain, but more importantly it it going to make ambiguity much
 	 harder to handle.
+** Input Data Rendering
+	 How do we want to render a vector of input objects?
+
+	 Let's start with homogeneous vectors.
+
+	 We either want to show nothing but a collapsed list, or we want to show a
+	 single object from the list. If it's homogeneous then it doesn't matter which
+	 one, so the first one is good enough. If it's heterogeneous, then we want to
+	 be able to select which element to focus on.
+
+	 So the list itself is a little div which needs widgets to collapse completely
+	 or open t show collapased versions of everything in it, as well as something
+	 that makes just a single object show (uncollapsed).
+
+	 Maybe as a first step this could happen when you choose one object to open in
+	 the sublist? Sounds reasonable. Just try something time!
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
@@ -1074,3 +1111,15 @@
 
 	 I'm going to need space/time representations of data next or else using the
 	 data binding is going to be exceedingly tedious
+** [2017-08-11 Fri 13:02]
+	 Why does the border-color attribute have to come after the border attribute
+	 in style maps? What's going to happen if the style map gets big enough to not
+	 be an aray-map any longer?
+** [2017-08-11 Fri 13:03]
+	 We definitely need to store to focus of the input data pane in the app db. We
+	 don't want everything collapsing on reload.
+
+	 I'm a bit stuck on how to make the data panel navigable without being
+	 overwhelmingly busy. It needs to be fundamentally simple, barely there at all
+	 except when needed. The main point is to see only the data you want to work
+	 with, the controls are incidental (and unfortunately necessary).

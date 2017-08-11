@@ -8,6 +8,10 @@
 ;; TODO: Move this into geometry. Distance is a naturally polymorphic function
 ;; of any two geometric structures. In principle it's the min over all points a
 ;; in A, b in B, but that's not computationally useful.
+;;
+;; We'd need a multimethod that finds the type of each argument and then
+;; switches off. Is there a way to enforce symmetry in the arguments
+;; systematically? Feels like it's going to be awkward... macro magic?
 (defmulti dist classify)
 
 (defmethod dist :line
@@ -32,6 +36,9 @@
         q  (shapes/value q)
         p' [(first p) (second q)]
         q' [(first q) (second p)]]
+    ;; REVIEW: This is the naive algorithm, but it comes out clinky, doesn't it?
+    ;; The most natural implementation geometrically should be the natural way
+    ;; to write the code should it not?
     (apply min
            (map #(dist % c)
              (map (fn [[p q]]
