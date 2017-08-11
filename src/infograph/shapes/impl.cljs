@@ -34,6 +34,7 @@
   transformed to pixel coordinates via linear (affine?) projection."
   (project [this window]))
 
+;; REVIEW: Maybe call this unpackable/unpack?
 (defprotocol IValue
   "Records that have a concrete value but need types for other kinds of
   polymorphism, can express that value here."
@@ -78,7 +79,10 @@
   (project [_ w]
     (window/invert w (window/project w [x y])))
 
-  ;; TODO: Instantiable
+  Instantiable
+  (instantiate [_ data]
+    (Coordinate-2D. (instantiate x data) (instantiate y data)))
+
   IValue
   (value [_] [x y]))
 
@@ -86,6 +90,10 @@
   Projectable
   (project [_ w]
     (window/project-scalar w v))
+
+  Instantiable
+  (instantiate [_ data]
+    (Scalar. (instantiate v data)))
 
   IValue
   (value [_] v))

@@ -24,13 +24,13 @@
   (render-value [this query]))
 
 (defn- receive-drop [query-path ev]
+  (.stopPropagation ev)
   (let [drop-path (read-string
                    (.getData (.-dataTransfer ev) "path"))]
     (re-frame/dispatch [:infograph.events/property-drop drop-path query-path])))
 
 (defn value-dropper [v q]
   [:div {:on-drag-over #(.preventDefault %)
-         ;; stopPropagation? Probably
          ;; TODO: Drag hover effects
          :on-drop (partial receive-drop q)}
    (str v)])
@@ -43,8 +43,7 @@
   infograph.shapes.impl/Coordinate-2D
   (render-value [{:keys [x y]} q]
     [:table {:on-drag-over #(.preventDefault %)
-             :on-drop (partial receive-drop q)}
-
+             :on-drop      (partial receive-drop q)}
      [:tbody
       [:tr
        [:td [:span "x"]]
@@ -84,26 +83,32 @@
   [s]
   (select-keys s [:p :q]))
 
-(defn nearest-shape [w {:keys [shapes]} loc]
+(defn nearest-shape [w data {:keys [shapes]} loc]
   (->> shapes
-       (map (fn [s] [(locator/dist (shapes/project s w) loc) s]))
+       (map (fn [s]
+              [(-> s
+                   (shapes/instantiate data)
+                   (shapes/project w)
+                   (locator/dist loc))
+               s]))
        (sort-by first)
        first))
 
 (defn property-window []
   (let [drag-position (re-frame/subscribe [:drag-position])
-        canvas (re-frame/subscribe [:r2-canvas])
-        w (re-frame/subscribe [:window])]
+        canvas        (re-frame/subscribe [:canvas-raw])
+        data          (re-frame/subscribe [:inst-data])
+        w             (re-frame/subscribe [:window])]
     (fn []
       (when @drag-position
         (let [[x y :as loc] @drag-position
-              [d s] (nearest-shape @w @canvas loc)
-              [ox oy] (:offset @w)]
+              [d s]         (nearest-shape @w @data @canvas loc)
+              [ox oy]       (:offset @w)]
           (if (and d (< d 20))
-            [:div {:style {:position "absolute"
+            [:div {:style {:position        "absolute"
                            :backgroundColor "rgba(255,255,255,0.8)"
-                           :top (+ y 20)
-                           :left (+ ox x)}}
+                           :top             (+ y 20)
+                           :left            (+ ox x)}}
              ;;FIXME: We're going to have to pass in the uninstantiated shape
              ;;since that's the shape in the main app db that we're querying
              ;;against.

@@ -55,13 +55,6 @@
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
 
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
-		dimensions of the data.
-
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Infinite Images
 		Images should be able to span the entirety of Euclidean space since only
 		that part that fits into the current window needs to be rendered.
@@ -276,12 +269,22 @@
 		that lines have length, and endpoints, but that they aren't
 		independent. Most importantly these classes need to be open to extension by
 		the designer at runtime.
+
+		Still need to think up a representation for data bound properties. Otherwise
+		this has proven its concept.
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+** Done
 *** Drag data to properties
 		Data fields dragged into properties should set Schema values on those
 		properties.
 
 		There also needs to be a way to set a computation based on a data value.
-** Done
 *** Pixel distances
 		The current Euclidean distances are nice mathematically, but as we zoom the
 		image they make the distances vary in a non intuitive way for the user. If I
@@ -1051,3 +1054,9 @@
 			If we try to query the shape data by value then we need to pass the
 			uninstantiated data into the query builder otherwise it won't match the
 			actual app data.
+** [2017-08-10 Thu 22:21]
+	 Dragging properties into visual objects is working in the most basic way. Now
+	 I need some interesting data to try it on.
+
+	 I'm going to need space/time representations of data next or else using the
+	 data binding is going to be exceedingly tedious
