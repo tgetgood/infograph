@@ -150,30 +150,32 @@
   ;; FIXME: Worst. Name. Ever.
   ;; But seriously you have to remember to invoke it as hiccup, not a function,
   ;; and I keep tripping on that.
-  (render [this path] "Produce hiccup from renderable data."))
+  (render [this focus path] "Produce hiccup from renderable data."))
 
 (extend-protocol IRender
   nil
-  (render [_ _]
+  (render [_ _ _]
     (.error js/console "Attempting to render nil input element.")))
 
 (defn drag-start [p ev]
   (.setData (.-dataTransfer ev) "path" p))
 
 (defn string-component
-  [x p]
+  [x _ p]
   (fn []
     [:span {:style {:color "#a11"}
-            :on-touch-move #(do (.preventDefault n%))
-            :draggable true}
+            :on-touch-move #(.preventDefault %)
+            :draggable true
+            :on-drag-start (partial drag-start p)}
      x]))
 
 (defn number-component
-  [x p]
+  [x _ p]
   (let [open? (reagent/atom false)]
     (fn [x p]
       [:div
        [:span {:style {:color "#164"}
+               :on-touch-move #(.preventDefault %)
                :draggable true
                :on-drag-start (partial drag-start p)
                :on-click #(swap! open? not)}
@@ -191,19 +193,27 @@
                   :type :range}])])))
 
 (defn boolean-component
-  [x p]
+  [x _ p]
   [:span {:style {:color "#219"}
           :draggable true}
    (str x)])
 
 (defn vector-component
-  [x p]
+  [x focus p]
   ;; TODO: Keys. What am I going to use, UUIDs? The input data is more or less
   ;; static at the moment, so this hack isn't so bad...'
-  `[:div
-    [:span {:style {:color "#997"}} "["]
-    ~@(map-indexed (fn [i x] [render x (conj p i)]) x)
-    [:span {:style {:color "#997"}} "]"]])
+  [:div {:style {:border "solid"
+                 :border-color "#997"
+                 :border-width "1px"}}
+   [:span {:on-click #(swap! open? not)}
+    (if @open? "collapse" "expand")]
+   (cond
+     @open?    `[:div
+                 ~@(map-indexed (fn [i x] [render x (conj p i)]) x)]
+     @selected [render (get x @selected) (conj p @selected)]
+     ;; REVIEW: Explicit nil is better than fall through right? Or is it
+     ;; just confusing?
+     :else     nil)])
 
 #_(defn set-component
   [x]
@@ -216,7 +226,7 @@
    [render v (conj p k)]])
 
 (defn map-component
-    [x p]
+  [x _ p]
   [:span
    (map (fn [[k v :as x]]
           ^{:key k} [map-entry-component x p])
@@ -242,12 +252,13 @@
     IRender
     (render [x p] (c x p))))
 
-(defn data-panel [data]
-  [render data []])
+(defn data-panel [data focus]
+  [render data focus []])
 
 (defn wired-data []
-  (let [data (re-frame/subscribe [:data])]
+  (let [data  (re-frame/subscribe [:data])
+        focus (re-frame/subscribe [:data-focus])]
     (fn []
       [:div
        [property-window]
-       [data-panel @data]])))
+       [data-panel @data @focus]])))

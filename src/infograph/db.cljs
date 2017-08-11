@@ -55,7 +55,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def default-db
-  {:data input/nice-vec
+  {:data {:data input/nice-vec
+          :focus []}
    :input {:strokes [{:start nil :current nil :end nil}]
            :drag-position [0 0]}
    :canvas {:shape (shapes/empty-frame)

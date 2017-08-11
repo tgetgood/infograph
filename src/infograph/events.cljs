@@ -22,7 +22,7 @@
 (re-frame/reg-event-db
  :update-data-value
  (fn [db [_ p v]]
-   (assoc-in db (cons :data p) v)))
+   (assoc-in db (concat [:data :data] p) v)))
 
 (re-frame/reg-event-db
  :set-input-mode
@@ -84,7 +84,12 @@
 (re-frame/reg-sub
  :data
  (fn [db _]
-   (:data db)))
+   (-> db :data :data)))
+
+(re-frame/reg-sub
+ :data-focus
+ (fn [db _]
+   (-> db :data :focus)))
 
 (re-frame/reg-sub
  :input-mode
