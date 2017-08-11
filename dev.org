@@ -34,7 +34,7 @@
 		Presumably via AJAX
 
 * Work
-** Unsorted Ideas
+** Unsorted Thoughts
 	 Ideas that I've jotted down, but haven't thought through and inserted into
 	 the backlog yet.
 *** Very Lazy Rendering
@@ -68,7 +68,7 @@
 
 		This will probably get fixed along with contextual highlighting of the
 		subtables.
-** Next Ideas
+** Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
 *** Multiple Representations of Shapes
@@ -81,6 +81,14 @@
 		histogram: the drawing widgets represent rectangles by the diagonal line
 		which is natural enough, but in any histogram context we want to isolate and
 		manipulate the width and height of the rectangle, not the diagonal.
+**** Unified Ambiguous Shapes (duplicate issue)
+		 Shapes can be represented in many ways. Don't choose one and enforce that on
+		 the user. Learn to deal with diversity and ambiguity (ambiguity because you
+		 don't always know what circle means, you know a bunch of things circle could
+		 mean and there's always the chance they're all wrong.
+
+		 This is critical, but I'm still not sure how to do it, so it's not at the
+		 top of the list
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,
@@ -173,14 +181,9 @@
 *** Drag hover highlighting in property windows
 		We need to indicate clearly what will be effected on drop. Highlighting the
 		candidate to be replaced seems like a good solution.
-*** Unified Ambiguous Shapes
-		Shapes can be represented in many ways. Don't choose one and enforce that on
-		the user. Learn to deal with diversity and ambiguity (ambiguity because you
-		don't always know what circle means, you know a bunch of things circle could
-		mean and there's always the chance they're all wrong.
-
-		This is critical, but I'm still not sure how to do it, so it's not at the
-		top of the list.
+*** Aesthetically pleasing data tree rendering
+		What we have now is hideous. Not even good enough to be campy. It works, but
+		ugh.
 *** Code Adjustments
 		Sometimes you want more precision than a mouse offers. Or you have exact
 		mockups (though this is supposed to remove the need for mockups). For this
@@ -288,7 +291,10 @@
 *** Allow visual objects to respond to user input
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
-** Current
+** Current Work
+*** Real dataset
+		Get some real data to play with. Something to graph would be ideal.
+** Done
 *** Complex Data Tree Rendering
 		Currently complex data is just rendered as a humongous list. That won't
 		do. Lists and objects need to collapse, the user should be able to focus on
@@ -296,9 +302,11 @@
 
 		I'm bumping this up because we really need to be able to focus on individual
 		bits of data before spatial iteration or temporal animations make sense.
-*** Real dataset
-		Get some real data to play with. Something to graph would be ideal.
-** Done
+
+		I've settled on a mechanism to control collapsing and expanding of the
+		tree. It's almost comically hideous, but it's working.
+
+		It also gives me a place to add the controls for space-time manipulations.
 *** Property windows for shapes
 		I've been so tied up figuring out canvas that I haven't actually done
 		anything regarding dragging data into shapes. There's a lot of work to be
@@ -899,6 +907,21 @@
 
 	 Maybe as a first step this could happen when you choose one object to open in
 	 the sublist? Sounds reasonable. Just try something time!
+
+	 The focus cursor is an interesting problem. How do we store the modal state
+	 of the data panel is such a way that it can be toggled open and closed, but
+	 we can retain previously opened stuff if we close anre reopen? Much like in
+	 chrome devtools.
+
+	 The data is a tree (it comes from JSON after all) so why not just keep a tree
+	 of all previously interacted bits? We're already passing navigational paths
+	 down through the code, so why not?
+
+	 The focus cursor is just a map with two keys :open? a bool, and :children a
+	 map from keys (or ints in the case of a vector) to more focus cursors. The
+	 same logic that links data to VOs works to toggle the :open? fields and
+	 navigate the structure.
+
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
@@ -1116,8 +1139,8 @@
 	 in style maps? What's going to happen if the style map gets big enough to not
 	 be an aray-map any longer?
 ** [2017-08-11 Fri 13:03]
-	 We definitely need to store to focus of the input data pane in the app db. We
-	 don't want everything collapsing on reload.
+	 We definitely need to store the focus of the input data pane in the app
+	 db. We don't want everything collapsing on reload.
 
 	 I'm a bit stuck on how to make the data panel navigable without being
 	 overwhelmingly busy. It needs to be fundamentally simple, barely there at all

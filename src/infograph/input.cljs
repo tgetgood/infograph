@@ -14,8 +14,8 @@
 (defn nice-map []
   {:x (rand-int 500)
    :y (rand-int 1000)
-   :length (rand-int 20 200)
-   :label "I'm a something"})
+   :length (rand-int 200)
+   :label "I'm a someting"})
 
 (def nice-vec
   (into [] (take 4 (repeatedly nice-map))))
@@ -148,9 +148,6 @@
 ;; number #164
 
 (defprotocol IRender
-  ;; FIXME: Worst. Name. Ever.
-  ;; But seriously you have to remember to invoke it as hiccup, not a function,
-  ;; and I keep tripping on that.
   (render [this focus path] "Produce hiccup from renderable data."))
 
 (extend-protocol IRender
@@ -171,27 +168,25 @@
      x]))
 
 (defn number-component
-  [x _ p]
-  (let [open? (reagent/atom false)]
-    (fn [x p]
-      [:div
-       [:span {:style {:color "#164"}
-               :on-touch-move #(.preventDefault %)
-               :draggable true
-               :on-drag-start (partial drag-start p)
-               :on-click #(swap! open? not)}
-        (str x)]
-       (when @open?
-         [:input {:style {:float "right"
-                          :margin-bottom "2px"}
-                  :defaultValue x
-                  :min 0
-                  :max 2000
-                  :on-click #(.stopPropagation %)
-                  :on-change #(re-frame/dispatch
-                               [:update-data-value p
-                                (int (.-value (.-target %)))])
-                  :type :range}])])))
+  [x {:keys [open?]} p]
+  [:div
+   [:span {:style {:color "#164"}
+           :on-touch-move #(.preventDefault %)
+           :draggable true
+           :on-drag-start (partial drag-start p)
+           :on-click #(re-frame/dispatch [:infograph.events/toggle-data p])}
+    (str x)]
+   (when open?
+     [:input {:style {:float "right"
+                      :margin-bottom "2px"}
+              :defaultValue x
+              :min 0
+              :max 2000
+              :on-click #(.stopPropagation %)
+              :on-change #(re-frame/dispatch
+                           [:update-data-value p
+                            (int (.-value (.-target %)))])
+              :type :range}])])
 
 (defn boolean-component
   [x _ p]
@@ -200,38 +195,43 @@
    (str x)])
 
 (defn vector-component
-  [x focus p]
+  [v {:keys [open? children] :as focus} query-path]
   ;; TODO: Keys. What am I going to use, UUIDs? The input data is more or less
   ;; static at the moment, so this hack isn't so bad...'
-  [:div {:style {:border "solid"
+  [:div {:style {:border       "solid"
                  :border-color "#997"
                  :border-width "1px"}}
-   [:span {:on-click #(swap! open? not)}
-    (if @open? "collapse" "expand")]
-   (cond
-     @open?    `[:div
-                 ~@(map-indexed (fn [i x] [render x (conj p i)]) x)]
-     @selected [render (get x @selected) (conj p @selected)]
-     ;; REVIEW: Explicit nil is better than fall through right? Or is it
-     ;; just confusing?
-     :else     nil)])
+   [:span {:on-click
+           #(re-frame/dispatch [:infograph.events/toggle-data query-path])}
+    (if open? "collapse [" "expand []")]
+   (when open?
+     (into
+      [:div]
+      (map-indexed (fn [i x]
+                     [css/row
+                      [render x (get children i) (conj query-path i)]])
+                   v)))])
+
 
 #_(defn set-component
   [x]
   (vector-component x ))
 
-(defn map-entry-component
-  [[k v] p]
-  [css/row
-   [:span {:style {:color "#a1f"}} k]
-   [render v (conj p k)]])
-
 (defn map-component
-  [x _ p]
-  [:span
-   (map (fn [[k v :as x]]
-          ^{:key k} [map-entry-component x p])
-     x)])
+  [m {:keys [open? children] :as f} query-path]
+  [:div {:style {:border       "solid"
+                 :border-color "#a1f"
+                 :border-width "1px"}}
+   [:span {:on-click
+           #(re-frame/dispatch [:infograph.events/toggle-data query-path])}
+    (if open? "collapse {" "expand {}")]
+   (when open?
+     (map (fn [[k e]]
+            ^{:key k}
+            [css/row
+             [:span {:style {:color "#a1f"}} k]
+             [render e (get children k) (conj query-path k)]])
+       m))])
 
 (def render-map
   ;; TODO: More types...
@@ -257,9 +257,9 @@
   [render data focus []])
 
 (defn wired-data []
-  (let [data  (re-frame/subscribe [:data])
+  (let [data  (re-frame/subscribe [:inst-data])
         focus (re-frame/subscribe [:data-focus])]
     (fn []
       [:div
        [property-window]
-       [data-panel @data @focus]])))
+       [data-panel (:data @data) @focus]])))
