@@ -31,12 +31,12 @@
 
 (defn calculate-width [n c]
   ;;TODO: Make sure that the numbers add up to something logical.
-  ;;TODO: What do we do if the quotient below is not an integer? 
+  ;;TODO: What do we do if the quotient below is not an integer?
   (get numbers
        (if-let [width (:width (meta c))]
          width
          (if (= n 1)
-           1
+           12
            (quot 12 n)))))
 
 (defn columnize [opts n c]
@@ -53,4 +53,3 @@
 
 (defn button [& content]
   (vapply :a.button content))
-
