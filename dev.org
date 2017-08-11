@@ -51,6 +51,18 @@
 		to. If we can and the user drops immediately just do it.
 
 		I think this is redundant with an idea somewhere else.
+** Bugs
+*** Origin isn't on default canvas
+		The canvas thinks that (0,0) is the bottom left corner, but that corner is
+		actually some 20 or 30 pixels beneath the browser window.
+
+		It's a canvas sizing issue.
+*** Type checks on dropped properties
+		If I drop an int into a property that knows it should be a coordinate, that
+		should cause an error.
+
+		This will probably get fixed along with contextual highlighting of the
+		subtables.
 ** Next Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
