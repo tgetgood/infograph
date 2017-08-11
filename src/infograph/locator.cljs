@@ -5,6 +5,9 @@
 (defn classify [shape point]
   (shapes/classify shape))
 
+;; TODO: Move this into geometry. Distance is a naturally polymorphic function
+;; of any two geometric structures. In principle it's the min over all points a
+;; in A, b in B, but that's not computationally useful.
 (defmulti dist classify)
 
 (defmethod dist :line
