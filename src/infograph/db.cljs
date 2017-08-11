@@ -55,18 +55,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def default-db
-  {:data {:data input/nice-vec
-          :focus []}
-   :input {:strokes [{:start nil :current nil :end nil}]
-           :drag-position [0 0]}
-   :canvas {:shape (shapes/empty-frame)
+  {:data   {:data  input/nice-vec
+            :focus {:open?    false
+                    :children {}}}
+   :input  {:strokes       [{:start nil :current nil :end nil}]
+            :drag-position [0 0]}
+   :canvas {:shape      (shapes/empty-frame)
             :input-mode :grab
-            :window {:zoom 1
-                     :origin [1 0]
-                     :offset [0 0]
-                     :width 0
-                     :height 0}}})
+            :window     {:zoom   1
+                         :origin [0 0]
+                         :offset [0 0]
+                         :width  0
+                         :height 0}}})
 
 
 (defn spec-db []
   (spec/explain ::db @re-frame.db/app-db))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Query fns
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn inst-data [db]
+  {:data  (-> db :data :data)
+   :input (-> db :input)})
+
+(def window-path [:canvas :window])
+
+(defn window [db]
+  (get-in db window-path))

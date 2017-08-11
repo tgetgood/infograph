@@ -1,7 +1,6 @@
 (ns infograph.events
   (:require [infograph.canvas :as canvas]
             [infograph.db :as db]
-            [infograph.events.dom :as dom-events]
             [infograph.shapes :as shapes]
             [re-frame.core :as re-frame]))
 
@@ -35,7 +34,7 @@
    (let [[width height :as dim] (canvas/canvas-container-dimensions)
          offset (canvas/canvas-container-offset)]
      (array-map
-      :db (update-in db [:canvas :window] assoc
+      :db (update-in db db/window-path assoc
                      :width width :height height :offset offset)
       ::resize-canvas! [canvas dim]
       ::redraw-canvas! [(canvas/context canvas) @last-draw]))))
@@ -67,6 +66,12 @@
    (update-in db [:canvas :shape]
               hack-assoc-in query-path (shapes/connection drop-path))))
 
+(re-frame/reg-event-db
+ ::toggle-data
+ (fn [db [_ path]]
+   (let [q (concat [:data :focus] (interleave (repeat :children) path) [:open?])]
+     (update-in db q not))))
+
 ;;;;; FX
 
 (re-frame/reg-fx
@@ -80,11 +85,6 @@
    (canvas/set-canvas-size! canvas dimensions)))
 
 ;;;;; Subscriptions
-
-(re-frame/reg-sub
- :data
- (fn [db _]
-   (-> db :data :data)))
 
 (re-frame/reg-sub
  :data-focus
@@ -102,17 +102,9 @@
    (get-in db [:canvas :shape])))
 
 (re-frame/reg-sub
- :input
- (fn [db _]
-   (:input db)))
-
-(re-frame/reg-sub
  :inst-data
- (fn [_ _]
-   [(re-frame/subscribe [:data])
-    (re-frame/subscribe [:input])])
- (fn [[data input]]
-   {:data data :input input}))
+ (fn [db _]
+   (db/inst-data db)))
 
 (re-frame/reg-sub
  :drag-position
@@ -122,7 +114,7 @@
 (re-frame/reg-sub
  :window
  (fn [db _]
-   (get-in db [:canvas :window])))
+   (db/window db)))
 
 (re-frame/reg-sub
  :r2-canvas

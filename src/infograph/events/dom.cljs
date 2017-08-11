@@ -1,6 +1,6 @@
 (ns infograph.events.dom
   (:require [clojure.string :as string]
-            [infograph.locator :as locator]
+            [infograph.db :as db]
             [infograph.shapes :as shapes]
             [infograph.window :as window]
             [re-frame.core :as re-frame]))
@@ -110,8 +110,9 @@
 (re-frame/reg-event-db
  ::drop
  (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])
-         shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) db)
+   (let [w (db/window db)
+         data (db/inst-data db)
+         shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) data)
          loc (event-location w ev)])
    (.log js/console "droppted canvas")
    db))
@@ -119,7 +120,7 @@
 (re-frame/reg-event-db
  ::drag
  (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])
+   (let [w (db/window db)
          loc (event-location w ev)]
      (assoc-in db [:input :drag-position] loc))))
 
@@ -131,30 +132,30 @@
 (re-frame/reg-event-db
  ::click
  (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])]
+   (let [w (db/window db)]
      #_(.log js/console (event-location w ev))
      db)))
 
 (re-frame/reg-event-db
  ::zoom
  (fn [db [_ ev]]
-   (let [w (get-in db [:canvas :window])
+   (let [w (db/window db)
          zc (event-location w ev)
          dz (.-deltaY ev)]
      (-> db
-         (update-in [:canvas :window] window/zoom-window dz zc)))))
+         (update-in db/window-path window/zoom-window dz zc)))))
 
 (re-frame/reg-event-db
  ::move
  (fn [db [_  ev]]
    (let [mode (get-in db [:canvas :input-mode])
-         w (get-in db [:canvas :window])]
+         w (db/window db)]
      (if (= mode :grab)
        (let [loc (window/invert w (window/pixel-clicked w ev))
              old (get-in db [:input :strokes 0 :current])]
          (cond-> (assoc-in db [:input :strokes 0 :current] loc)
            (and old (in-stroke? db))
-           (update-in [:canvas :window] window/pan-window
+           (update-in db/window-path window/pan-window
                       (scale-dist w old loc))))
        (let [loc (event-location w ev)]
          (assoc-in db [:input :strokes 0 :current] loc))))))
@@ -163,7 +164,7 @@
  ::stroke-start
  (fn [db [_ ev]]
    (let [mode (get-in db [:canvas :input-mode])
-         w (get-in db [:canvas :window])
+         w (db/window db)
          loc (event-location w ev)]
      (let [constructor (get shapes/construction-map mode)]
        (cond-> (assoc-in db [:input :strokes 0] {:start loc})
@@ -174,11 +175,12 @@
  ::stroke-end
  (fn [db [_ ev]]
    (let [mode (get-in db [:canvas :input-mode])
-         w (get-in db [:canvas :window])
+         data (db/inst-data db)
+         w (db/window db)
          loc (event-location w ev)]
      (cond-> (assoc-in db [:input :strokes 0 :end] loc)
        (not= mode :grab)
-       (update-in [:canvas :shape] shapes/instantiate db)))))
+       (update-in [:canvas :shape] shapes/instantiate data)))))
 
 (re-frame/reg-event-fx
  ::dom-event
