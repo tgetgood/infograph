@@ -56,13 +56,13 @@
   (render-value [{:keys [x y]} q]
     [:table (drop-cbs q)
      [:tbody
-      [:tr
+      [:tr (drop-cbs (conj q :x))
        [:td [:span "x"]]
        ;; FIXME: Passing nil is definitely a mistake
-       [:td (value-dropper (render-value x) (conj q :x))]]
-      [:tr
+       [:td (render-value x)]]
+      [:tr (drop-cbs (conj q :y))
        [:td [:span "y"]]
-       [:td (value-dropper (render-value y) (conj q :y))]]]])
+       [:td (render-value y)]]]])
 
   infograph.shapes.impl/Scalar
   (render-value [this q]

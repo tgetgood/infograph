@@ -27,5 +27,15 @@
     (js/Math.abs (- (shapes/value r)  d))))
 
 (defmethod dist :rectangle
-  [_ _]
-  3000)
+  [{:keys [p q]} c]
+  (let [p  (shapes/value p)
+        q  (shapes/value q)
+        p' [(first p) (second q)]
+        q' [(first q) (second p)]]
+    (apply min
+           (map #(dist % c)
+             (map (fn [[p q]]
+                    {:type :line
+                     :p p
+                     :q q})
+               [[p p'] [p' q] [q q'] [q' p]])))))
