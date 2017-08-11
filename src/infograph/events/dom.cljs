@@ -124,6 +124,11 @@
      (assoc-in db [:input :drag-position] loc))))
 
 (re-frame/reg-event-db
+ ::reset-drag
+ (fn [db _]
+   (update db :input dissoc :drag-position)))
+
+(re-frame/reg-event-db
  ::click
  (fn [db [_ ev]]
    (let [w (get-in db [:canvas :window])]
@@ -152,7 +157,7 @@
            (update-in [:canvas :window] window/pan-window
                       (scale-dist w old loc))))
        (let [loc (event-location w ev)]
-         (assoc-in db [:input :strokes 0 :current] loc)))))) 
+         (assoc-in db [:input :strokes 0 :current] loc))))))
 
 (re-frame/reg-event-db
  ::stroke-start

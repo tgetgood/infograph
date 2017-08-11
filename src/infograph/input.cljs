@@ -25,6 +25,7 @@
 
 (defn- receive-drop [query-path ev]
   (.stopPropagation ev)
+  (re-frame/dispatch [:infograph.events.dom/reset-drag])
   (let [drop-path (read-string
                    (.getData (.-dataTransfer ev) "path"))]
     (re-frame/dispatch [:infograph.events/property-drop drop-path query-path])))
