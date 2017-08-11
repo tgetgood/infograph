@@ -251,7 +251,7 @@
 (doseq [[t c] render-map]
   (extend-type t
     IRender
-    (render [x p] (c x p))))
+    (render [x f p] (c x f p))))
 
 (defn data-panel [data focus]
   [render data focus []])
