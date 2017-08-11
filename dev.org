@@ -51,6 +51,8 @@
 		to. If we can and the user drops immediately just do it.
 
 		I think this is redundant with an idea somewhere else.
+*** Prettier property windows
+		Not a priority for the proof of concept, but boy are they ugly.
 ** Bugs
 *** Origin isn't on default canvas
 		The canvas thinks that (0,0) is the bottom left corner, but that corner is
@@ -268,6 +270,14 @@
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
 ** Current
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+** Done
 *** Property windows for shapes
 		I've been so tied up figuring out canvas that I haven't actually done
 		anything regarding dragging data into shapes. There's a lot of work to be
@@ -284,14 +294,6 @@
 
 		Still need to think up a representation for data bound properties. Otherwise
 		this has proven its concept.
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
-		dimensions of the data.
-
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
-** Done
 *** Drag data to properties
 		Data fields dragged into properties should set Schema values on those
 		properties.

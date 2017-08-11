@@ -21,7 +21,7 @@
   (into [] (take 4 (repeat nice-map))))
 
 (defprotocol ValueRender
-  (render-value [this query]))
+  (render-value [this] [this query]))
 
 (defn- receive-drop [query-path ev]
   (.stopPropagation ev)
@@ -29,32 +29,52 @@
                    (.getData (.-dataTransfer ev) "path"))]
     (re-frame/dispatch [:infograph.events/property-drop drop-path query-path])))
 
-(defn value-dropper [v q]
-  [:div {:on-drag-over #(.preventDefault %)
+(defn drop-cbs [q]
+  {:on-drag-over #(.preventDefault %)
          ;; TODO: Drag hover effects
-         :on-drop (partial receive-drop q)}
-   (str v)])
+         :on-drop (partial receive-drop q)})
 
+(defn nested-values [v r]
+  [:span (str v) " " r])
+
+(defn value-dropper [v q]
+  [:div (drop-cbs q)
+   v])
+
+;; REVIEW: Schemata are fundamentally different from projectables. Currently
+;; that's dealt with by a variadic render function. What happens though when we
+;; have projectables inside schemata?
 (extend-protocol ValueRender
   default
-  (render-value [this path]
-    (value-dropper this path))
+  (render-value
+    ([this]
+     (str this))
+    ([this path]
+     (value-dropper (str this) path)))
 
   infograph.shapes.impl/Coordinate-2D
   (render-value [{:keys [x y]} q]
-    [:table {:on-drag-over #(.preventDefault %)
-             :on-drop      (partial receive-drop q)}
+    [:table (drop-cbs q)
      [:tbody
       [:tr
        [:td [:span "x"]]
-       [:td (value-dropper x (conj q :x))]]
+       ;; FIXME: Passing nil is definitely a mistake
+       [:td (value-dropper (render-value x) (conj q :x))]]
       [:tr
        [:td [:span "y"]]
-       [:td (value-dropper y (conj q :y))]]]])
+       [:td (value-dropper (render-value y) (conj q :y))]]]])
 
   infograph.shapes.impl/Scalar
   (render-value [this q]
-    (value-dropper (:v this) (conj q :v))))
+    (value-dropper (render-value (:v this)) (conj q :v)))
+
+  infograph.shapes.impl/SubSchema
+  (render-value [{:keys [query shape]}]
+    (nested-values query (render-value shape)))
+
+  infograph.shapes.impl/ValueSchema
+  (render-value [{:keys [query]}]
+    (nested-values query "")))
 
 (defn- table-row [[k v] q]
   [:tr
