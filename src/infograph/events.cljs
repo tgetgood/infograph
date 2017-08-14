@@ -32,10 +32,10 @@
  ::resize-canvas
  (fn [{db :db [_ canvas] :event}]
    (let [[width height :as dim] (canvas/canvas-container-dimensions)
-         offset (canvas/canvas-container-offset)]
+         offset                 (canvas/canvas-container-offset)]
      (array-map
-      :db (update-in db db/window-path assoc
-                     :width width :height height :offset offset)
+      :db              (update-in db db/window-path assoc
+                                  :width width :height height :offset offset)
       ::resize-canvas! [canvas dim]
       ::redraw-canvas! [(canvas/context canvas) @last-draw]))))
 

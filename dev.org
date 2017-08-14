@@ -81,14 +81,7 @@
 		histogram: the drawing widgets represent rectangles by the diagonal line
 		which is natural enough, but in any histogram context we want to isolate and
 		manipulate the width and height of the rectangle, not the diagonal.
-**** Unified Ambiguous Shapes (duplicate issue)
-		 Shapes can be represented in many ways. Don't choose one and enforce that on
-		 the user. Learn to deal with diversity and ambiguity (ambiguity because you
-		 don't always know what circle means, you know a bunch of things circle could
-		 mean and there's always the chance they're all wrong.
 
-		 This is critical, but I'm still not sure how to do it, so it's not at the
-		 top of the list
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,
@@ -151,6 +144,9 @@
 		 - Hopf bifurcations
 		 - Escherian infinite regress tiling
 		 - Anything not a fractal?
+*** Contextual Drop
+		If I drag data onto the endpoint of a line it should be interpreted
+		differently than if I drag it into the middle or the other endpoint.
 *** Constraint Based Properties
 		It should be possible to specify properties as functions of other
 		properties. e.g. enforce a square is square by setting h = w, calculating
@@ -201,7 +197,7 @@
 		We will often want to drive visual objects from properties of the data in
 		aggregate (averages, percentages, number of categories, etc.) or functions
 		of the data (number of Xs OR Ys, people with more than N friends who voted
-		for a given party (this one is actually a query, but we can handle that
+												for a given (party this one is actually a query, but we can handle that
 		right? Spectre is a great candidate although I feel that it will need some
 		massaging so as not to scare away visual artists, journalist, teachers, and
 		the rest of humanity that I want to feel comfortable using this.
@@ -265,16 +261,6 @@
 		negative", but there are always assumptions at the bottom.
 
 		So what if the renderer can learn to improvise? Then I get rich?
-*** Shape UUIDs
-		Right now compound shapes contain a set of subshapes. Shapes are then
-		references to themselves in this bag. With immutability this seems good
-		enough for now, but something keeps nagging atthe back of my mind telling me
-		to replace this by maps from uuids to shapes. Is this just my imperatively
-		trained past sneaking up on me? If we use UUIDs then wouldn't we need to
-		change the UUID every time the shape changes? And then we'd be exactly where
-		we are with sets, no?
-
-		I need to sort this out one way or another.
 *** Leaning from aggregate use
 		Wouldn't it be swell if the platform could detect that you're defining
 		something equivalent, or nearly so, to something that it's seen before and
@@ -291,9 +277,27 @@
 *** Allow visual objects to respond to user input
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
+*** Shape UUIDs
+		Right now compound shapes contain a set of subshapes. Shapes are then
+		references to themselves in this bag. With immutability this seems good
+		enough for now, but something keeps nagging atthe back of my mind telling me
+		to replace this by maps from uuids to shapes. Is this just my imperatively
+		trained past sneaking up on me? If we use UUIDs then wouldn't we need to
+		change the UUID every time the shape changes? And then we'd be exactly where
+		we are with sets, no?
+
+		I need to sort this out one way or another.
 ** Current Work
 *** Real dataset
 		Get some real data to play with. Something to graph would be ideal.
+**** Flare.csv
+		 Lines of code by namespace (I think) of a big project.
+		 See: https://bl.ocks.org/mbostock/ca5b03a33affa4160321, or
+		 https://bl.ocks.org/mbostock/b4c0f143db88a9eb01a315a1063c1d77
+
+		 For stuff to do with it.
+**** Price of lighting
+		 Shows how the price of lighting has decreased over the past ~700 years.
 ** Done
 *** Complex Data Tree Rendering
 		Currently complex data is just rendered as a humongous list. That won't
@@ -404,6 +408,92 @@
 		origin to this rectangle).
 
 		Diagonal line (either one)
+*** Thoughts [2017-08-13 Sun]
+		This is really a special case of the general need for a new kind of
+		dispatch. Given a context — such as render this to the screen — and an
+		argument — the this — figure out what to do (with this in context). That's
+		almost uselessly vague. But that's kind of the point: this needs to be very
+		general.
+
+		When the dispatch sees a value in a context, it needs to decide whether or
+		not it already knows what to do, that is it needs to decide whether it has a
+		move ready to play.
+
+		How does this differ from multimethods in general? The context is the
+		(polymorphic) function and the values determine the dispatch. It's not
+		enough though to just dispatch on the values; there's a deeper layer here. A
+		square is a square, but the same square can be represented in many ways. The
+		dispatch needs to be aware of transformations between the representations
+		and provide both a transformation and a way to render the resulting
+		representation.
+
+		A contextualist view might be that everything has to be polymorphic.
+
+		Isn't this just two levels of polymorphic dispatch? The first level decides
+		on a transformation and the second a rendering strategy. The levels aren't
+		independent: in order to choose a transformation, the first level has to
+		know what the known rendering strategies are. It also stands to reason that
+		some pipelines of transform and render are better than others and there will
+		by no means be uniqueness. The interdependence here is more like search or
+		LP, and the levels need to act in concert.
+
+		Rendering a shape to the canvas element is a game. The entire app state is
+		the context, the raw shape (unprojected, uninstantiated) is the operand. The
+		strategy needs to be aware that it can't render unintantiated data, etc..
+
+		Is this useful? The current way of doing it is much more robust, if
+		conceivably less flexible.
+
+		If I know how to render a rectangle in a certain format and am asked to
+		render what I am told is a rectangle in a hitherto unseen format, I need to
+		ask how to proceed. I don't know how to go on. Two obvious ways of teaching
+		me how to go on are either showing me directly how to draw a rectangle from
+		the new representation (at some level), or showing me how to transform one
+		representation into another.
+
+		What if I figure out that drawing from one representation is far easier than
+		others? Do I insist on transformations? This is an optimisation, but it's
+		not the developer optimising, it's the program trying to optimise
+		itself. That should be encouraged, no? Unless the program suffers from the
+		same tendency to waste time doing easy things instead of solving the real
+		problem that I find myself treading and retreading ad nauseum.
+
+		The same idea comes up in the distance function between shapes. I know that
+		distance is a symmetric function, so I can intelligently double the number
+		of dispatches I recognise, but every time a new shape gets added, or an old
+		shape gets a new representation, I need to relearn how to calculate
+		distances between this new guy and all of the old stuff I knew. Or best case
+		I can transform it into a known problem (like the min over a set of known
+		subshapes). Of course even better would be to teach the computer to apply
+		the vector space reasoning to new shapes and derive these itself, but
+		somehow that feels a lot harder. Maybe it's not. Think about it.
+
+		We have a very similar problem with dropping data into shape
+		properties. Here both the data being dropped, the shape being dropped into
+		and the exact table in the table tree being dropped on are all relevant. A
+		lot of inference can be done from types. Likely a lot of inference can be
+		drawn from the names of the data keys and the properties.
+
+		It would seem that we want a multimethod that returns function which we can
+		then invoke. The problem with that is that we can't see into the
+		functions. Maybe if it returns a vector of functions that can then be
+		composed either directly or as a reducer. I can't say. Maybe in this
+		instance it doesn't matter and we're better off just returning and executing
+		a function.
+
+		We have a more subtle problem with styles. We can represent a rectangle as
+		four lines — leaving the orthogonality of angles implicit — or we can
+		represent it as a single line along the diagonal — again implicitly assuming
+		the edges line up with the axes — and convert between the two. But if the
+		four lines in the first representation have different styles, then the
+		rectangle has to be rendered according to the first paradigm. If the
+		rectangle as a whole has a fill then it will have to be rendered according
+		to the second. It could also take both if, for example, the edges are
+		different colours and there's a fill gradient.
+
+		The approach of returning a rendering function can work here too. The logic
+		to choose that function just got a lot harder though. That's okay though
+		since that's what the computer's supposed to learn to do for us...
 ** Transformations and Equivalence Classes
 	 Needless to say, there are lots of ways to represent even simple shapes. The
 	 number of possible representations of complex shapes goes to
@@ -922,6 +1012,10 @@
 	 same logic that links data to VOs works to toggle the :open? fields and
 	 navigate the structure.
 
+	 The down side here is that we can only navigate associative data
+	 structures. Sets and lists won't work. That's okay for the moment, but we'll
+	 see.
+
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
@@ -1146,3 +1240,27 @@
 	 overwhelmingly busy. It needs to be fundamentally simple, barely there at all
 	 except when needed. The main point is to see only the data you want to work
 	 with, the controls are incidental (and unfortunately necessary).
+** [2017-08-12 Sat 19:36]
+	 Minor existential crisis. I'm back to wavering between something specialised
+	 for data vis and a full blown UI construction set. The second is definitely
+	 cooler and far more useful (potentially), but likely I should focus on
+	 keeping it small and getting something out the door. Plan for growth, don't
+	 insist on everything at once. But then what am I making?
+
+	 Read through the D3 examples. We should be able to do all of that. That's a
+	 lot. Getting just 20% there will be enough to get some valuable feedback.
+** [2017-08-13 Sun 16:19]
+	 Is this a data visualisation tool or a drawing tool? I keep going back and
+	 forth and I'm afraid I'm going to make it both and not good for either. It
+	 seems on the surface that they're closely related problems, but there are
+	 unique difficulties in each.
+
+	 Is that really true though? I want to create something with all of the power
+	 of D3 — eventually — so we do need to be able to draw arbitrarily complex
+	 things and set very complex constraints between them.
+
+	 Can you teach it what a voronoi diagram is by drawing lines and setting
+	 simple constraints? Proceed by induction?
+
+	 Can we work with geographic data using a static image of the world and
+	 overlaying gps data on it?

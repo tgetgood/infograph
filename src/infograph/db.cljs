@@ -56,7 +56,7 @@
 
 (def default-db
   {:data   {:data  input/nice-vec
-            :focus {:open?    false
+            :focus {:open?    true
                     :children {}}}
    :input  {:strokes       [{:start nil :current nil :end nil}]
             :drag-position [0 0]}
