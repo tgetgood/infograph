@@ -84,17 +84,6 @@
 ** Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
-*** Multiple Representations of Shapes
-		Most shapes can be represented in an open ended number of ways. One of the
-		fundamental propositions of this tool is that it shouldn't matter which
-		representation data is given in, it should be manipulable in any other.
-
-		A general way to store and translate between multiple representations is
-		critical to infograph. I'm already seeing where I need it to make a simple
-		histogram: the drawing widgets represent rectangles by the diagonal line
-		which is natural enough, but in any histogram context we want to isolate and
-		manipulate the width and height of the rectangle, not the diagonal.
-
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,
@@ -120,13 +109,6 @@
 		to what the user means, then we should order the properties accordingly and
 		if the user just quickly drops the data without waiting for the menu then
 		bind it to the first entry (most likely guess).
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
-		dimensions of the data.
-
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Infinite Images
 		Images should be able to span the entirety of Euclidean space since only
 		that part that fits into the current window needs to be rendered.
@@ -306,7 +288,7 @@
 
 		I need to sort this out one way or another.
 ** Current Work
-*** Real dataset
+*** Real datasets
 		Get some real data to play with. Something to graph would be ideal.
 **** Flare.csv
 		 Lines of code by namespace (I think) of a big project.
@@ -316,6 +298,32 @@
 		 For stuff to do with it.
 **** Price of lighting
 		 Shows how the price of lighting has decreased over the past ~700 years.
+**** Election data
+		 Get the data from the last election, just seat and popular totals.
+*** Multiple Representations of Shapes
+		Most shapes can be represented in an open ended number of ways. One of the
+		fundamental propositions of this tool is that it shouldn't matter which
+		representation data is given in, it should be manipulable in any other.
+
+		A general way to store and translate between multiple representations is
+		critical to infograph. I'm already seeing where I need it to make a simple
+		histogram: the drawing widgets represent rectangles by the diagonal line
+		which is natural enough, but in any histogram context we want to isolate and
+		manipulate the width and height of the rectangle, not the diagonal.
+
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with difference
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+*** Canvas isolation
+		Can we render multiple canvases in isolation from one another? We're going
+		to need to.
+*** Export
+		Some way is needed to export the graphics for use inside another
+		application.
 ** Done
 *** Complex Data Tree Rendering
 		Currently complex data is just rendered as a humongous list. That won't
@@ -381,15 +389,14 @@
 		data.
 *** Simple Model of User Interaction
 		- Note taken on [2017-08-04 Fri 10:49] \\
-			User interactions are modeled identically to designer interactions. I think the
-			basic idea of how to do this is well established, but I don't yet know what to
-			do with it.
-		Steal a note from Elm and model user interation as just another data
-		stream. How far can I take this? Obviously what I want is a programming
-		environment that makes handling users clicking, draging, mousing around,
-		just the same as it handles drawing a rectangle and making its length
-		correspond to some property in data that you'll get from a server at
-		runtime.
+			User interactions are modeled identically to designer interactions. I
+			think the basic idea of how to do this is well established, but I don't
+			yet know what to do with it.  Steal a note from Elm and model user
+			interation as just another data stream. How far can I take this? Obviously
+			what I want is a programming environment that makes handling users
+			clicking, draging, mousing around, just the same as it handles drawing a
+			rectangle and making its length correspond to some property in data that
+			you'll get from a server at runtime.
 
 		Will I get there? Who knows? but that's no reason not to try.
 * Notes
