@@ -288,18 +288,6 @@
 
 		I need to sort this out one way or another.
 ** Current Work
-*** Real datasets
-		Get some real data to play with. Something to graph would be ideal.
-**** Flare.csv
-		 Lines of code by namespace (I think) of a big project.
-		 See: https://bl.ocks.org/mbostock/ca5b03a33affa4160321, or
-		 https://bl.ocks.org/mbostock/b4c0f143db88a9eb01a315a1063c1d77
-
-		 For stuff to do with it.
-**** Price of lighting
-		 Shows how the price of lighting has decreased over the past ~700 years.
-**** Election data
-		 Get the data from the last election, just seat and popular totals.
 *** Multiple Representations of Shapes
 		Most shapes can be represented in an open ended number of ways. One of the
 		fundamental propositions of this tool is that it shouldn't matter which
@@ -325,6 +313,18 @@
 		Some way is needed to export the graphics for use inside another
 		application.
 ** Done
+*** Real datasets
+		Get some real data to play with. Something to graph would be ideal.
+**** Flare.csv
+		 Lines of code by namespace (I think) of a big project.
+		 See: https://bl.ocks.org/mbostock/ca5b03a33affa4160321, or
+		 https://bl.ocks.org/mbostock/b4c0f143db88a9eb01a315a1063c1d77
+
+		 For stuff to do with it.
+**** Price of lighting
+		 Shows how the price of lighting has decreased over the past ~700 years.
+**** Election data
+		 Get the data from the last election, just seat and popular totals.
 *** Complex Data Tree Rendering
 		Currently complex data is just rendered as a humongous list. That won't
 		do. Lists and objects need to collapse, the user should be able to focus on

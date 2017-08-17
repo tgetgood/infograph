@@ -4,6 +4,41 @@
             [infograph.shapes :as shapes]
             [re-frame.db :as re-frame.db]))
 
+;;;;; Dummy dataset
+
+(def election-data
+  {:registered    25939742
+   :voted         17711983
+   :valid-ballots 17591468
+   :seats         {:liberal      184
+                   :conservative 99
+                   :ndp          44
+                   :bloc         10
+                   :green        1
+                   :other        0}
+   :votes         {:liberal      6930136
+                   :conservative 5600469
+                   :ndp          3461262
+                   :bloc         818652
+                   :green        695864
+                   :other        85085}})
+(def party-names
+  {:liberal      "Liberal"
+   :conservative "Conservative"
+   :ndp          "NDP"
+   :bloc         "Bloc Québécois"
+   :green        "Green Party"
+   :other        "Other"})
+
+(def colours
+  "Colours stolen cut, paste, and sinker from wikipedia markup."
+  {:liberal      "#EA6D6A"
+   :conservative "#6495ED"
+   :ndp          "#F4A460"
+   :bloc         "#87CEFA"
+   :green        "#99C955"
+   :other        "grey"})
+
 ;;;; Geometry
 ;; TODO: Gather these somewhere else.
 
@@ -55,7 +90,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def default-db
-  {:data   {:data  input/nice-vec
+  {:data   {:data  election-data
             :focus {:open?    true
                     :children {}}}
    :input  {:strokes       [{:start nil :current nil :end nil}]
