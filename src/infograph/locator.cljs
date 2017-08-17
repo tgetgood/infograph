@@ -3,7 +3,7 @@
             [infograph.shapes :as shapes]))
 
 (defn classify [shape point]
-  (shapes/classify shape))
+  (:type shape))
 
 ;; TODO: Move this into geometry. Distance is a naturally polymorphic function
 ;; of any two geometric structures. In principle it's the min over all points a
