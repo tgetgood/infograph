@@ -56,6 +56,19 @@
 *** Smarter (More Mathematical) Distance Calculation
 		Distances between things in space is an obvious natural transformation. So
 		instead of having different specialised dist fns unify them.
+*** Infer Structure of Images
+		Once we're at the point where the program can see what you're drawing, align
+		it to things others have drawn, and offer suggestions / improvements that
+		are genuinely useful, then we should be able to take imported images, and
+		treat them like things users have drawn. Destructuring and interpreting
+		them.
+
+		That would be a fascinating development. The AI implications are obvious,
+		the implications for a drawing tool are just starting to dawn on me. Imagine
+		you could just import open source map tiles and the program could just
+		recognise the streets and map them to a different projection of the earth?
+		Backgrounds that you would never want to create in the tool but which you
+		could manipulate with it. The list goes on.
 ** Bugs
 *** Origin isn't on default canvas
 		The canvas thinks that (0,0) is the bottom left corner, but that corner is
@@ -177,6 +190,11 @@
 *** Drag hover highlighting in property windows
 		We need to indicate clearly what will be effected on drop. Highlighting the
 		candidate to be replaced seems like a good solution.
+*** Hover for Property Windows
+		Currently the property window pops up as soon as you drag the data over a
+		visual object. you should need to pause for a split second before it
+		opens. As it is it can be annoying to try and get to a particular property
+		which is hidden by a window that keeps popping up aggressively.
 *** Aesthetically pleasing data tree rendering
 		What we have now is hideous. Not even good enough to be campy. It works, but
 		ugh.
@@ -273,7 +291,7 @@
 *** Duality of Drawing Code
 		The code that draws the shapes the user sees should be open to inspection
 		and modification. This is a whole other can of worms that I'd rather not
-		open at the moment but I do want to pursue this. Likely as next project.
+		open at the moment but I do want to pursue this. Likely as a next project.
 *** Allow visual objects to respond to user input
 		It should be possible to specify properties of vos that respond to the user
 		clicking, mousing around, etc..
@@ -1264,3 +1282,18 @@
 
 	 Can we work with geographic data using a static image of the world and
 	 overlaying gps data on it?
+** [2017-08-15 Tue 12:55]
+	 Thinking about the quadratic tree I'm seeing that there's a higher level game
+	 being playd here. Looking at the hundreds of cool things D3 can do, and how
+	 disparate they are, I'm starting to realise that no boxed solution is good
+	 enough. We need a base platform which allows any of these things to be built
+	 by users (as libraries) and ideally within the platform itself. So we need to
+	 teach the drawing software about forces, about relations between visual
+	 objects, about cartographic projections and GIS, about voronoi diagrams,
+	 etc. etc..
+
+	 The base platform has to be capable not only of performing these tasks, it
+	 needs to be capable of learning how to perform them at a higher level.
+
+	 I think that to do this we're going to need both code representations of vos
+	 and constraint based programming from the very start.
