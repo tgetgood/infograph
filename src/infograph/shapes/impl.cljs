@@ -62,7 +62,9 @@
 
   SubSchema
   (instantiate [this data]
-    (instantiate (.-shape this) (get-in data (.-query this))))
+    (if-let [cursor (get-in data (.-query this))]
+      (instantiate (.-shape this) cursor)
+      this))
 
   ComputationSchema
   (instantiate [this input]
