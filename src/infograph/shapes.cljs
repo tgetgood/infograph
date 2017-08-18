@@ -95,7 +95,6 @@
 
 (defmethod draw* :rectangle
   [ctx {:keys [style p w h]}]
-  (.log js/console p w h)
   (when (and w h)
     (canvas/rectangle ctx style p (geometry/v+ p w h))))
 

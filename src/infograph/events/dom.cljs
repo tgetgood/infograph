@@ -1,6 +1,7 @@
 (ns infograph.events.dom
   (:require [clojure.string :as string]
             [infograph.db :as db]
+            [infograph.locator :as locator]
             [infograph.shapes :as shapes]
             [infograph.window :as window]
             [re-frame.core :as re-frame]))
@@ -76,9 +77,14 @@
 (defmulti event-location (fn [w ev] (classify-event ev)) :default :mouse)
 
 (defmethod event-location :mouse
-  ;; Also covers :wheel and :click
   [w ev]
   (base-location w ev))
+
+;; HACK: It's not a good idea to function in two modes at once. We need to stop
+;; using cartesian coords in some places and cg coords in others.
+(defmethod event-location :click
+  [w ev]
+  (window/pixel-clicked w ev))
 
 (defmethod event-location :touch
   [w ev]
@@ -114,7 +120,6 @@
          data (db/inst-data db)
          shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) data)
          loc (event-location w ev)])
-   (.log js/console "droppted canvas")
    db))
 
 (re-frame/reg-event-db
@@ -129,12 +134,29 @@
  (fn [db _]
    (update db :input dissoc :drag-position)))
 
+;; TODO: Should probably update this to make the interior of shapes distance 0
+;; from them. I.e. treat VOs as solids, not outlines.
+(defn nearest-shape [w data {:keys [shapes]} loc]
+  (->> shapes
+       (map (fn [s]
+              [(-> s
+                   (shapes/instantiate data)
+                   (shapes/project w)
+                   (locator/dist loc))
+               s]))
+       (sort-by first)
+       first))
+
 (re-frame/reg-event-db
  ::click
  (fn [db [_ ev]]
-   (let [w (db/window db)]
-     #_(.log js/console (event-location w ev))
-     db)))
+   (let [w (db/window db)
+         loc (event-location w ev)
+         data (db/inst-data db)
+         frame (get-in db [:canvas :shape])
+         [d s] (nearest-shape w data frame loc)]
+     (cond-> db
+       (and (number? d) (< d 20)) (assoc :property-window s)))))
 
 (re-frame/reg-event-db
  ::zoom

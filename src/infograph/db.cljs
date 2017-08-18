@@ -95,6 +95,7 @@
                     :children {}}}
    :input  {:strokes       [{:start nil :current nil :end nil}]
             :drag-position nil}
+   :property-window nil
    :canvas {:shape      (shapes/empty-frame)
             :input-mode :grab
             :window     {:zoom   1
