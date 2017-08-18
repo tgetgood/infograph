@@ -31,18 +31,22 @@
     (js/Math.abs (- (shapes/value r)  d))))
 
 (defmethod dist :rectangle
-  [{:keys [p q]} c]
-  (let [p  (shapes/value p)
-        q  (shapes/value q)
-        p' [(first p) (second q)]
-        q' [(first q) (second p)]]
-    ;; REVIEW: This is the naive algorithm, but it comes out clinky, doesn't it?
-    ;; The most natural implementation geometrically should be the natural way
-    ;; to write the code should it not?
-    (apply min
-           (map #(dist % c)
-             (map (fn [[p q]]
-                    {:type :line
-                     :p p
-                     :q q})
-               [[p p'] [p' q] [q q'] [q' p]])))))
+  [{:keys [p w h]} c]
+  (if (and w h)
+    (let [[x y :as p]  (shapes/value p)
+          ;; HACK: All of the projection goodness is being undone by scalar
+          ;; height.
+          q  (geometry/v+ p w h)
+          p' [(first p) (second q)]
+          q' [(first q) (second p)]]
+      ;; REVIEW: This is the naive algorithm, but it comes out clinky, doesn't it?
+      ;; The most natural implementation geometrically should be the natural way
+      ;; to write the code should it not?
+      (apply min
+             (map #(dist % c)
+               (map (fn [[p q]]
+                      {:type :line
+                       :p p
+                       :q q})
+                 [[p p'] [p' q] [q q'] [q' p]]))))
+    js/Infinity))

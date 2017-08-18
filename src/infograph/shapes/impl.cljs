@@ -74,6 +74,19 @@
   default
   (value [this] this))
 
+(defrecord Vector-2D [x y]
+  Projectable
+  (project [_ w]
+    (window/vflip (window/project-vector w [x y])))
+
+  Instantiable
+  (instantiate [_ data]
+    (Vector-2D. (instantiate x data) (instantiate y data)))
+
+  IValue
+  (value [_]
+    [x y]))
+
 (defrecord Coordinate-2D [x y]
   Projectable
   (project [_ w]

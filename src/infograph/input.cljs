@@ -106,7 +106,7 @@
 
 (defmethod shape-properties :rectangle
   [s]
-  (select-keys s [:p :q]))
+  (select-keys s [:p :w :h]))
 
 (defn nearest-shape [w data {:keys [shapes]} loc]
   (->> shapes

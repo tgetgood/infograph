@@ -23,8 +23,19 @@
     [(* (- x ox) z) (* (- y oy) z)]))
 
 (defn project-scalar
+  "Scales scalar value by zoom."
   [{z :zoom} s]
   (* s z))
+
+(defn project-vector
+  "Scales vector v by zoom factor."
+  [{z :zoom} v]
+  (mapv (partial * z) v))
+
+(defn vflip
+  "Flips direction of vector in the y dimension. For canvas coordinate txs."
+  [[x y]]
+  [x (- y)])
 
 (defn coproject
   "Inverse of projection. Converts pixel coordinates into corresponding
