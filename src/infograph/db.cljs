@@ -1,6 +1,5 @@
 (ns infograph.db
   (:require [cljs.spec.alpha :as spec]
-            [infograph.input :as input]
             [infograph.shapes :as shapes]
             [re-frame.db :as re-frame.db]))
 

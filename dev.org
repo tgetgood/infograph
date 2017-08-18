@@ -81,6 +81,9 @@
 
 		This will probably get fixed along with contextual highlighting of the
 		subtables.
+*** Shapes can fall between pixels
+		We have some classic aliasing shinanigans with things disappearing and
+		reappearing as you drag them around the screen.
 ** Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
