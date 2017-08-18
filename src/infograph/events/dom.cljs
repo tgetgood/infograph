@@ -171,6 +171,22 @@
          (not= mode :grab)
          (update-in [:canvas :shape] shapes/conj-shape (constructor loc)))))))
 
+(defn valid-line? [s]
+  ;; FIXME: This is a job for specs
+  (not (some nil?
+              ((apply juxt (map (fn [k] (fn [d] (get-in d k)))
+                              [[:p :x] [:p :y] [:q :x] [:q :y]]))
+               s))))
+
+;; FIXME: This is a mess.
+(defn insta-clean [frame data]
+  (let [inst (shapes/instantiate frame data)]
+    (update inst :shapes
+            #(into #{}
+                  (remove (fn [s]
+                            (and (= :line (:type s)) (not (valid-line? s))))
+                          %)))))
+
 (re-frame/reg-event-db
  ::stroke-end
  (fn [db [_ ev]]
@@ -180,7 +196,7 @@
          loc (event-location w ev)]
      (cond-> (assoc-in db [:input :strokes 0 :end] loc)
        (not= mode :grab)
-       (update-in [:canvas :shape] shapes/instantiate data)))))
+       (update-in [:canvas :shape] insta-clean data)))))
 
 (re-frame/reg-event-fx
  ::dom-event
