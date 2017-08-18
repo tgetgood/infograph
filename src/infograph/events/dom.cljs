@@ -176,27 +176,34 @@
          (not= mode :grab)
          (update-in [:canvas :shape] shapes/conj-shape (constructor loc)))))))
 
-(defn valid-line? [s]
-  ;; FIXME: This is a job for specs
-  (not (some nil?
-              ((apply juxt (map (fn [k] (fn [d] (get-in d k)))
-                              [[:p :x] [:p :y] [:q :x] [:q :y]]))
-               s))))
+(defmulti valid? (fn [s] (:type s)))
+
+(defmethod valid? :default [_] true)
+
+(defmethod valid? :line
+  [{{u :x v :y} :p {s :x t :y} :q}]
+  (not (some nil? [s t u v])))
+
+(defmethod valid? :rectangle
+  [{{a :x b :y} :p {s :x t :y} :w {u :x v :y} :h}]
+  (not (some nil? [a b s t u v])))
+
+(defmethod valid? :circle
+  [{{x :x y :y} :c r :r}]
+  (not (some nil? [x y r])))
 
 ;; FIXME: This is a mess.
 (defn insta-clean [frame data]
   (let [inst (shapes/instantiate frame data)]
     (update inst :shapes
-            #(into #{}
-                  (remove (fn [s]
-                            (and (= :line (:type s)) (not (valid-line? s))))
-                          %)))))
+            #(into #{} (filter valid? %)))))
 
 (re-frame/reg-event-db
  ::stroke-end
  (fn [db [_ ev]]
    (let [mode (get-in db [:canvas :input-mode])
-         data (db/inst-data db)
+         ;; Make sure we only update the input dependencie
+         data (db/input db)
          w (db/window db)
          loc (event-location w ev)]
      (cond-> (assoc-in db [:input :strokes 0 :end] loc)
