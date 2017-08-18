@@ -42,6 +42,16 @@
   [:div (drop-cbs q)
    v])
 
+(defn- pair-table [{:keys [x y]} q]
+  [:table (drop-cbs q)
+   [:tbody
+    [:tr (drop-cbs (conj q :x))
+     [:td [:span "x"]]
+     [:td (render-value x)]]
+    [:tr (drop-cbs (conj q :y))
+     [:td [:span "y"]]
+     [:td (render-value y)]]]])
+
 ;; REVIEW: Schemata are fundamentally different from projectables. Currently
 ;; that's dealt with by a variadic render function. What happens though when we
 ;; have projectables inside schemata?
@@ -54,16 +64,12 @@
      (value-dropper (str this) path)))
 
   infograph.shapes.impl/Coordinate-2D
-  (render-value [{:keys [x y]} q]
-    [:table (drop-cbs q)
-     [:tbody
-      [:tr (drop-cbs (conj q :x))
-       [:td [:span "x"]]
-       ;; FIXME: Passing nil is definitely a mistake
-       [:td (render-value x)]]
-      [:tr (drop-cbs (conj q :y))
-       [:td [:span "y"]]
-       [:td (render-value y)]]]])
+  (render-value [this q]
+    (pair-table this q))
+
+  infograph.shapes.impl/Vector-2D
+  (render-value [this q]
+    (pair-table this q))
 
   infograph.shapes.impl/Scalar
   (render-value [this q]
@@ -119,7 +125,7 @@
        (sort-by first)
        first))
 
-(defn property-window []
+(defn floating-property-window []
   (let [drag-position (re-frame/subscribe [:drag-position])
         canvas        (re-frame/subscribe [:canvas-raw])
         data          (re-frame/subscribe [:inst-data])
@@ -134,11 +140,14 @@
                            :backgroundColor "rgba(255,255,255,0.8)"
                            :top             (+ y 20)
                            :left            (+ ox x)}}
-             ;;FIXME: We're going to have to pass in the uninstantiated shape
-             ;;since that's the shape in the main app db that we're querying
-             ;;against.
              [map->table (shape-properties s) [:shapes s]]]
             [:div {:style {:display :none}}]))))))
+
+(defn fixed-property-window [w data raw-frame loc]
+  (when loc
+    (let [[d s] (nearest-shape w data raw-frame loc)]
+      (when (and (number? d) (< d 20))
+        [map->table (shape-properties s) [:shapes s]]))))
 
 ;; Colours stolen from klipse:
 ;;
@@ -256,10 +265,18 @@
 (defn data-panel [data focus]
   [render data focus []])
 
+(defn side-panel [w data df canvas click]
+  [:div
+       [floating-property-window]
+       [:div
+        (css/row [data-panel (:data data) df])
+        (css/row [fixed-property-window w data canvas click])]])
+
 (defn wired-data []
-  (let [data  (re-frame/subscribe [:inst-data])
-        focus (re-frame/subscribe [:data-focus])]
+  (let [data       (re-frame/subscribe [:inst-data])
+        window     (re-frame/subscribe [:window])
+        click      (re-frame/subscribe [:shape-focus])
+        data-focus (re-frame/subscribe [:data-focus])
+        canvas     (re-frame/subscribe [:canvas-raw])]
     (fn []
-      [:div
-       [property-window]
-       [data-panel (:data @data) @focus]])))
+      [side-panel @window @data @data-focus @canvas @click])))
