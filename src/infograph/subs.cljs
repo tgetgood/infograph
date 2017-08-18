@@ -15,7 +15,7 @@
 (re-frame/reg-sub
  :shape-focus
  (fn [db _]
-   (:property-window db)))
+   (get-in db [:canvas :last-click])))
 
 (re-frame/reg-sub
  :input-mode

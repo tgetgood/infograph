@@ -95,8 +95,8 @@
                     :children {}}}
    :input  {:strokes       [{:start nil :current nil :end nil}]
             :drag-position nil}
-   :property-window nil
    :canvas {:shape      (shapes/empty-frame)
+            :last-click nil
             :input-mode :grab
             :window     {:zoom   1
                          :origin [0 0]
@@ -116,7 +116,13 @@
   {:data  (-> db :data :data)
    :input (-> db :input)})
 
+(defn input [db]
+  {:input (:input db)})
+
 (def window-path [:canvas :window])
 
 (defn window [db]
   (get-in db window-path))
+
+(defn mode [db]
+  (get-in db [:canvas :input-mode]))
