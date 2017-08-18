@@ -84,6 +84,21 @@
 ** Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
+*** Multiple Representations of Shapes
+		- Note taken on [2017-08-17 Thu 16:18] \\
+			We can avoid doing this now by just switching rectangles to a point, width,
+			height representation. I think I should do that because this is getting way out
+			of control. It's hard.
+		Most shapes can be represented in an open ended number of ways. One of the
+		fundamental propositions of this tool is that it shouldn't matter which
+		representation data is given in, it should be manipulable in any other.
+
+		A general way to store and translate between multiple representations is
+		critical to infograph. I'm already seeing where I need it to make a simple
+		histogram: the drawing widgets represent rectangles by the diagonal line
+		which is natural enough, but in any histogram context we want to isolate and
+		manipulate the width and height of the rectangle, not the diagonal.
+
 *** Graphical Adjustments
 		Every aspect of a shape you see should be adjustable in place just like
 		illustrator et al.. drag control points on bezier curves, drag lengths,
@@ -288,24 +303,22 @@
 
 		I need to sort this out one way or another.
 ** Current Work
-*** Multiple Representations of Shapes
-		Most shapes can be represented in an open ended number of ways. One of the
-		fundamental propositions of this tool is that it shouldn't matter which
-		representation data is given in, it should be manipulable in any other.
-
-		A general way to store and translate between multiple representations is
-		critical to infograph. I'm already seeing where I need it to make a simple
-		histogram: the drawing widgets represent rectangles by the diagonal line
-		which is natural enough, but in any histogram context we want to isolate and
-		manipulate the width and height of the rectangle, not the diagonal.
-
 *** Time / Space modes
 		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with difference
+		arranged in space? Of course you can do both simultaneously with different
 		dimensions of the data.
 
 		As a consequence, animations have to be first class. I don't yet know what
 		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+*** Dynamic Property Lookup
+		It should be possible to set a property to a map in a master and have the
+		instances pick keys for the map. The key could either be a key proper or an
+		index from a vector.
+
+		This is a very different take on the UI then I had been thinking previously
+		to this. It brings up the master-instance part of sketch again. That might
+		actually be a more robust solution to the space time problem then my current
+		thinking (which really hasn't had that much thought.
 *** Canvas isolation
 		Can we render multiple canvases in isolation from one another? We're going
 		to need to.
@@ -433,6 +446,11 @@
 		origin to this rectangle).
 
 		Diagonal line (either one)
+
+		To represent a fully general rctangle we need three vectors. A width, a
+		height, and a location. A diagonal line alone doesn't give the rotation of
+		the rectangle. You also need to specify the offset between the diagonal and
+		the base.
 *** Thoughts [2017-08-13 Sun]
 		This is really a special case of the general need for a new kind of
 		dispatch. Given a context — such as render this to the screen — and an
@@ -519,6 +537,22 @@
 		The approach of returning a rendering function can work here too. The logic
 		to choose that function just got a lot harder though. That's okay though
 		since that's what the computer's supposed to learn to do for us...
+*** Nested polymorphism
+		Really we want to dispatch on type, and then again on the data keys we
+		have. But we want to be able to add extra keys that get ignored, so we need
+		key classifiers. We also wany good error messages that say things like: "I
+		don't know what a circle is" or "I don't know how to draw a circle given
+		a :c and a :d". I think that this will require multiple levels of dispatch.
+
+		Another consideration are transformations. It would be good to visualise the
+		render loop as if I know how to render something, do it, if I don't look for
+		a transformer for it and recur on whatever that transformer returns. You can
+		add a step in the begining that checks that it makes sense to render at all
+		to make the rendering process a lazy tree traversal.
+
+		These are all exciting ideas, but I don't actually need them for the
+		vote-no-vote test case. I should just change the representation of
+		rectangles and be done with it.
 ** Transformations and Equivalence Classes
 	 Needless to say, there are lots of ways to represent even simple shapes. The
 	 number of possible representations of complex shapes goes to
@@ -1041,6 +1075,10 @@
 	 structures. Sets and lists won't work. That's okay for the moment, but we'll
 	 see.
 
+** Misc
+	 http://insider.zone/tools/client-side-url-redirect-generator/
+
+	 Redirects from static html. Not ideal, but should work in a pinch.
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
@@ -1304,3 +1342,40 @@
 
 	 I think that to do this we're going to need both code representations of vos
 	 and constraint based programming from the very start.
+** [2017-08-17 Thu 12:22]
+	 Trying to separate the canvas context from the things to be drawn is
+	 surprisingly difficult. I can't think of a way to do it nicely without monads
+	 and that feels like overkill. In the end, I think it's better to just keep
+	 passing ctx around explicitly.
+** [2017-08-17 Thu 12:59]
+	 So how do you make a multimethod polymorphic on multiple arguments?
+
+	 That's not very clear. Problem: dispatch polymorphically on arg x, and then
+	 dispatch polymorphically again on arg y. So we actually have a tree of
+	 polymorphism.
+
+	 Technically speaking we can just create a tree using a list of keys and
+	 dispatch on that. The problem here is that I want errors to trigger at each
+	 level where possible.
+
+	 We also want to know if multiple processors match the data. This kind of
+	 inconsistency should raise a flag to the system.
+
+	 I think I need to create my own dispatch system that eventually drops down to
+	 multimethods. If I can represent the code entirly as data then I should be
+	 able to let the runtime add new drawing methods on the fly.
+
+	 This is still a complected mess. I need to separate the drawing from the
+	 processing even more than I so far have. The drawing functions should be
+	 recursive in a data way. Basically we want to process the draw data until we
+	 end up with a shape that we recognise as directly renderable. That feels much
+	 easier said than done.
+** [2017-08-17 Thu 16:17]
+	 So much I haven't thought through in detail. How should style maps be related
+	 to properties in the property windows? There are a large number of entries
+	 that could be in the style map, but most of them won't be. We don't want to
+	 have all of them cluttering up the view.
+
+	 Maybe it would be best if I switched it to a select a shape, and have its
+	 property window stuck open beneath the data window. Then we could implement
+	 editing of the properties. And computational properties.
