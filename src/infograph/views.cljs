@@ -85,6 +85,5 @@
 
 (defn main-panel []
   [css/row {:style {:height "100%"}}
-   ^{:width 3} [input/wired-data]
-   ^{:width 9} [wired-panel]])
-
+   ^{:width 4} [input/wired-data]
+   ^{:width 8} [wired-panel]])
