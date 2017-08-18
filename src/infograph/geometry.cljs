@@ -3,8 +3,12 @@
 
 ;;;; Extending arithmetic operators to handle vectors.
 
-(defn v+ [p q]
-  (mapv + p q))
+(defn v+
+  ([] [0 0])
+  ([p] p)
+  ([p q] (mapv + p q))
+  ([p q & more]
+   (reduce v+ (v+ p q) more)))
 
 (defn v- [p q]
   (mapv - p q))
