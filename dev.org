@@ -84,6 +84,11 @@
 ** Ideas
 	 Roster of all ideas I've had regarding this project. Roughly sorted by
 	 importance in a purely subjective fashion.
+*** Immutable References to mutable shapes
+		Currently the whole shape tree is immutable which means that when we make a
+		modification to the shape or some subshape of it, all reference paths are
+		invalidated. That's not good. It's leading to all manner of hacks to keep
+		things somewhat consistent.
 *** Multiple Representations of Shapes
 		- Note taken on [2017-08-17 Thu 16:18] \\
 			We can avoid doing this now by just switching rectangles to a point, width,
@@ -303,13 +308,6 @@
 
 		I need to sort this out one way or another.
 ** Current Work
-*** Time / Space modes
-		Do you want to represent multiple data points as an animation, or as somehow
-		arranged in space? Of course you can do both simultaneously with different
-		dimensions of the data.
-
-		As a consequence, animations have to be first class. I don't yet know what
-		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Dynamic Property Lookup
 		It should be possible to set a property to a map in a master and have the
 		instances pick keys for the map. The key could either be a key proper or an
@@ -319,6 +317,13 @@
 		to this. It brings up the master-instance part of sketch again. That might
 		actually be a more robust solution to the space time problem then my current
 		thinking (which really hasn't had that much thought.
+*** Time / Space modes
+		Do you want to represent multiple data points as an animation, or as somehow
+		arranged in space? Of course you can do both simultaneously with different
+		dimensions of the data.
+
+		As a consequence, animations have to be first class. I don't yet know what
+		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
 *** Canvas isolation
 		Can we render multiple canvases in isolation from one another? We're going
 		to need to.
