@@ -36,42 +36,6 @@
 ;;;;; Drawing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn keyset [m] (into #{} (keys m)))
-
-(def uninformative-keys
-  [:style :type])
-
-(defn remove-uninformative-keys [m]
-  (apply disj m uninformative-keys))
-
-(defn classify [x] (:type x))
-
-
-
-(defmulti check-args
-  (fn [ctx type shape]
-    [type ]))
-
-(defn switch-info [shape]
-  (when (= :rectangle (:type shape))
-    (cond
-      (every? (partial contains? shape) [:p :q]) #{:p :q})))
-
-(def draw-map
-  (atom {:rectangle {#{:p :q}    :diagonal
-                     #{:p :w :h} :orthogonal}
-         :line      {#{:p :q} :endpoints}}))
-
-(defn defdrawmethod [shape-name representation-name required-keys]
-  ;; TODO: Check that we're not overwriting something or reusing a name
-  (swap! draw-map update shape-name assoc required-keys representation-name))
-
-#_(defdrawmethod :circle :radial #{:c :r}
-  [{:keys [c r]}]
-    body)
-
-;;;; end cruft
-
 (defmulti draw* (fn [ctx shape] (classify shape)))
 
 (defmethod draw* :default
