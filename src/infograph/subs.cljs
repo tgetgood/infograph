@@ -25,7 +25,7 @@
 (re-frame/reg-sub
  :canvas-raw
  (fn [db _]
-   (get-in db [:canvas :shape])))
+   (get-in db db/current-canvas)))
 
 (re-frame/reg-sub
  :inst-data

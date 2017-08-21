@@ -118,7 +118,8 @@
  (fn [db [_ ev]]
    (let [w (db/window db)
          data (db/inst-data db)
-         shapes (shapes/instantiate (get-in db [:canvas :shape :shapes]) data)
+         shapes (shapes/instantiate (get-in db (conj db/current-canvas :shapes))
+                                    data)
          loc (event-location w ev)])
    db))
 
@@ -174,7 +175,7 @@
      (let [constructor (get shapes/construction-map mode)]
        (cond-> (assoc-in db [:input :strokes 0] {:start loc})
          (not= mode :grab)
-         (update-in [:canvas :shape] shapes/conj-shape (constructor loc)))))))
+         (update-in db/current-canvas shapes/conj-shape (constructor loc)))))))
 
 (defmulti valid? (fn [s] (:type s)))
 
@@ -209,7 +210,7 @@
          loc (event-location w ev)]
      (cond-> (assoc-in db [:input :strokes 0 :end] loc)
        (not= mode :grab)
-       (update-in [:canvas :shape] insta-clean data)))))
+       (update-in db/current-canvas insta-clean data)))))
 
 (re-frame/reg-event-fx
  ::dom-event

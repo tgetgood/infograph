@@ -62,13 +62,13 @@
 (re-frame/reg-event-db
  ::property-drop
  (fn [db [_ drop-path query-path]]
-   (update-in db [:canvas :shape]
+   (update-in db db/current-canvas
               hack-assoc-in query-path (shapes/connection drop-path))))
 
 (re-frame/reg-event-db
  ::property-edit
  (fn [db [_ qp v]]
-   (update-in db [:canvas :shape]
+   (update-in db db/current-canvas
               hack-assoc-in qp v)))
 
 (re-frame/reg-event-db

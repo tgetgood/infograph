@@ -94,7 +94,10 @@
                     :children {}}}
    :input  {:strokes       [{:start nil :current nil :end nil}]
             :drag-position nil}
-   :canvas {:shape      (shapes/empty-frame)
+   ;; REVIEW: Should the current shape just be an id or ref to one of the
+   ;; shapes? The frame doesn't actually need to be stored here.
+   :canvas {:current    (shapes/empty-frame)
+            :shapes     {}
             :last-click nil
             :input-mode :grab
             :window     {:zoom   1
@@ -125,3 +128,5 @@
 
 (defn mode [db]
   (get-in db [:canvas :input-mode]))
+
+(def current-canvas [:canvas :current])
