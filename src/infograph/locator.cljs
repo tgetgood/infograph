@@ -7,7 +7,7 @@
 
 ;; TODO: Move this into geometry. Distance is a naturally polymorphic function
 ;; of any two geometric structures. In principle it's the min over all points a
-;; in A, b in B, but that's not computationally useful.
+;; in A, b in B of ||a - b||, but that's not computationally useful.
 ;;
 ;; We'd need a multimethod that finds the type of each argument and then
 ;; switches off. Is there a way to enforce symmetry in the arguments
