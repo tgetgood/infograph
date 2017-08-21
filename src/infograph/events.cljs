@@ -66,6 +66,12 @@
               hack-assoc-in query-path (shapes/connection drop-path))))
 
 (re-frame/reg-event-db
+ ::property-edit
+ (fn [db [_ qp v]]
+   (update-in db [:canvas :shape]
+              hack-assoc-in qp v)))
+
+(re-frame/reg-event-db
  ::toggle-data
  (fn [db [_ path]]
    (let [q (concat [:data :focus] (interleave (repeat :children) path) [:open?])]

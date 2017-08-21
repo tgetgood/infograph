@@ -189,8 +189,9 @@
   (not (some nil? [a b s t u v])))
 
 (defmethod valid? :circle
-  [{{x :x y :y} :c r :r}]
-  (not (some nil? [x y r])))
+  [{{x :x y :y} :c {r :v} :r}]
+  (and (not (some nil? [x y r]))
+       (js/isFinite r)))
 
 ;; FIXME: This is a mess.
 (defn insta-clean [frame data]

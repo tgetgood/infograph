@@ -16,27 +16,40 @@
                    (.getData (.-dataTransfer ev) "path"))]
     (re-frame/dispatch [:infograph.events/property-drop drop-path query-path])))
 
+(defn receive-edit [query-path ev]
+  (let [val (-> ev .-target .-value js/parseInt)]
+    (re-frame/dispatch [:infograph.events/property-edit query-path val])))
+
 (defn drop-cbs [q]
-  {:on-drag-over #(.preventDefault %)
-         ;; TODO: Drag hover effects
-         :on-drop (partial receive-drop q)})
+  {:on-drag-over  #(.preventDefault %)
+   ;; TODO: Drag hover effects
+   :on-drop (partial receive-drop q)})
 
 (defn nested-values [v r]
   [:span (str v) " " r])
 
 (defn value-dropper [v q]
-  [:div (drop-cbs q)
-   v])
+  (let [open? (reagent/atom false)]
+    (fn [v q]
+      [:div (drop-cbs q)
+       (if @open?
+         [:input {:on-change (partial receive-edit q)
+                  :on-key-press #(let [c (or (.-which %) (.-keyCode %))]
+                                   (when (== 13 c)
+                                     (swap! open? not)))
+                  :type "text"
+                  :default-value v}]
+         [:span {:on-click #(swap! open? not)} v])])))
 
 (defn- pair-table [{:keys [x y]} q]
   [:table (drop-cbs q)
    [:tbody
     [:tr (drop-cbs (conj q :x))
      [:td [:span "x"]]
-     [:td (render-value x)]]
+     [:td [value-dropper (render-value x) (conj q :x)]]]
     [:tr (drop-cbs (conj q :y))
      [:td [:span "y"]]
-     [:td (render-value y)]]]])
+     [:td [value-dropper (render-value y) (conj q :y)]]]]])
 
 ;; REVIEW: Schemata are fundamentally different from projectables. Currently
 ;; that's dealt with by a variadic render function. What happens though when we
@@ -47,7 +60,7 @@
     ([this]
      (str this))
     ([this path]
-     (value-dropper (str this) path)))
+     [value-dropper (str this) path]))
 
   infograph.shapes.impl/Coordinate-2D
   (render-value [this q]
@@ -59,7 +72,7 @@
 
   infograph.shapes.impl/Scalar
   (render-value [this q]
-    (value-dropper (render-value (:v this)) (conj q :v)))
+    [value-dropper (render-value (:v this)) (conj q :v)])
 
   infograph.shapes.impl/SubSchema
   (render-value [{:keys [query shape]}]

@@ -36,6 +36,8 @@
 ;;;;; Drawing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn classify [x] (:type x))
+
 (defmulti draw* (fn [ctx shape] (classify shape)))
 
 (defmethod draw* :default
