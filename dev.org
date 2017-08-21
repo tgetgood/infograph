@@ -1109,72 +1109,98 @@
 
 	 Redirects from static html. Not ideal, but should work in a pinch.
 ** Master Instance Logic
-	 I can't find my notes on the topic. That's disturbing, there were a lot of
-	 them as I recall.
+*** Musings
+		I can't find my notes on the topic. That's disturbing, there were a lot of
+		them as I recall.
 
-	 The idea of masters and instances comes directly from sketchpad. Sutherland
-	 set instances to automatically track changes to masters. This has coupling
-	 and reuse issues that weren't apparent back then — at least I presume not;
-	 sketchpad was a single user tool — if I use the same master for two instances
-	 in disparate parts of a large project, I might forget that connection and
-	 change the master only thinking of one instance. Then we get to have fun
-	 tracking down the source of the bug.
+		The idea of masters and instances comes directly from sketchpad. Sutherland
+		set instances to automatically track changes to masters. This has coupling
+		and reuse issues that weren't apparent back then — at least I presume not;
+		sketchpad was a single user tool — if I use the same master for two instances
+		in disparate parts of a large project, I might forget that connection and
+		change the master only thinking of one instance. Then we get to have fun
+		tracking down the source of the bug.
 
-	 Instead I propose to keep the edit history for all time (or as much as
-	 possible) of all instances and masters and branch instances off of specific
-	 edits of masters. There should be a simple proceedure to edit a master and
-	 then update whichever instances you want to the new head of the master edit
-	 tree. If we add branching editing, we have git for illustrator. That's kind
-	 of cool, but not something I'm going to get working in any generality is a
-	 short timeframe.
+		Instead I propose to keep the edit history for all time (or as much as
+		possible) of all instances and masters and branch instances off of specific
+		edits of masters. There should be a simple proceedure to edit a master and
+		then update whichever instances you want to the new head of the master edit
+		tree. If we add branching editing, we have git for illustrator. That's kind
+		of cool, but not something I'm going to get working in any generality is a
+		short timeframe.
 
-	 Back to the point.
+		Back to the point.
 
-	 Everything is a master until every possible field is set. Any variables make
-	 it a master. This gets a bit tricky when you consider that computational
-	 futures on data or user input that we don't have yet isn't actually a
-	 variable, but I'm sure that can be worked out.
+		Everything is a master until every possible field is set. Any variables make
+		it a master. This gets a bit tricky when you consider that computational
+		futures on data or user input that we don't have yet isn't actually a
+		variable, but I'm sure that can be worked out.
 
-	 How do we make the history tree as unobtrusive as possible? I'm afraid that
-	 editing anything will become an exercise in manual change propagation; that
-	 can't be allowed.
+		How do we make the history tree as unobtrusive as possible? I'm afraid that
+		editing anything will become an exercise in manual change propagation; that
+		can't be allowed.
 
-	 We need a way to enforce that masters are fully instantiated before we let
-	 them go to the user — be exported, or whatever.
+		We need a way to enforce that masters are fully instantiated before we let
+		them go to the user — be exported, or whatever.
 
-	 We also need to distinguish between creating steps that define a shape
-	 (rectangle width, height, orientation), and incidental stuff like the exact
-	 position. Is the orientation incidental or inherent? The scale shouldn't
-	 be. Probably everything should be defined up to an affine transformation.
+		We also need to distinguish between creating steps that define a shape
+		(rectangle width, height, orientation), and incidental stuff like the exact
+		position. Is the orientation incidental or inherent? The scale shouldn't
+		be. Probably everything should be defined up to an affine transformation.
 
-	 That shouldn't be hard to accomplish. We just need to represent shapes by a
-	 single coordinate and a collection of vectors and scalars. The point is
-	 really only for reference. I bet I'm rediscovering really basic vector
-	 graphics. Time to read up. I never appreciate knowledge so much as when I've
-	 rediscovered an impoverished subset of it.
+		That shouldn't be hard to accomplish. We just need to represent shapes by a
+		single coordinate and a collection of vectors and scalars. The point is
+		really only for reference. I bet I'm rediscovering really basic vector
+		graphics. Time to read up. I never appreciate knowledge so much as when I've
+		rediscovered an impoverished subset of it.
 
-	 So then an image will often be made up of a collection of affine txs of of
-	 other masters as well as some stuff drawn in from scratch (which could be
-	 construed as temporary, or not so temporary, masters).
+		So then an image will often be made up of a collection of affine txs of of
+		other masters as well as some stuff drawn in from scratch (which could be
+		construed as temporary, or not so temporary, masters).
 
-	 So rendering will have to walk down to the leaves of the tree, and apply
-	 affine txs as it recurs back up to the root. That sounds expensive but can
-	 probably be mathematically simplified, or just cached.
+		So rendering will have to walk down to the leaves of the tree, and apply
+		affine txs as it recurs back up to the root. That sounds expensive but can
+		probably be mathematically simplified, or just cached.
 
-	 I keep coming back to the idea that a rectangle is just lines. Does having a
-	 smaller set of primitives make my life easier, or harder? It reduces the
-	 number of decompositions the computer has to figure out, which is probably a
-	 bad thing that seems like a good thing.
+		I keep coming back to the idea that a rectangle is just lines. Does having a
+		smaller set of primitives make my life easier, or harder? It reduces the
+		number of decompositions the computer has to figure out, which is probably a
+		bad thing that seems like a good thing.
 
-	 How do we keep track of the litanies of shapes? A doubly linked list isn't
-	 enough because of branching. Maybe we should have sort of master manager
-	 objects that contain the whole undo tree of edits to shapes. We should be
-	 able to check which tree a shape belongs to and access all leaves below
-	 it. What are the odds that we want to update a master to a non-leaf? Would it
-	 suffice to update it to a leaf and then hit undo a few times?
+		How do we keep track of the litanies of shapes? A doubly linked list isn't
+		enough because of branching. Maybe we should have sort of master manager
+		objects that contain the whole undo tree of edits to shapes. We should be
+		able to check which tree a shape belongs to and access all leaves below
+		it. What are the odds that we want to update a master to a non-leaf? Would it
+		suffice to update it to a leaf and then hit undo a few times?
 
-	 Undotree navigation graphic? widget? complicated...
+		Undotree navigation graphic? widget? complicated...
 
+*** From notebook [2017-08-21 Mon]
+		Below I'm considering affine transformations to be of the form s + Mv + t,
+		where s, & t are translation vectors, v is the input, and M is the linear
+		transform matrix.
+
+		A component is any set of vectors and scalars, together with the semantics
+		of the shape, and one additional anchor vector (which determines the
+		origin). Any component can be rendered unambiguously and transformed by any
+		affine transformation.
+
+		A shape is zero or more pairs of components or shapes and affine
+		transformations. Each component or shape is transformed by its respective tx
+		and the results are superimposed to form the shape.
+
+		This is enough to give us affine invariance in our shapes and a convenient
+		hierarchical abstraction for building complex shapes from simple ones.
+
+		Note that any shape can be made into a component by the addition of anchor
+		vectors and associated semantics.
+
+		Possibly the biggest win here is that I can get rid of the Coordinate-2D
+		type and replace projection logic with the more general affine tx framework.
+
+		Maybe I can also clean up the clunky inversion logic by just applying one
+		more affine tx at the very end of the chain before rendering.
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
