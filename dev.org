@@ -311,15 +311,6 @@
 
 		I need to sort this out one way or another.
 ** Current Work
-*** Dynamic Property Lookup
-		It should be possible to set a property to a map in a master and have the
-		instances pick keys for the map. The key could either be a key proper or an
-		index from a vector.
-
-		This is a very different take on the UI then I had been thinking previously
-		to this. It brings up the master-instance part of sketch again. That might
-		actually be a more robust solution to the space time problem then my current
-		thinking (which really hasn't had that much thought.
 *** Time / Space modes
 		Do you want to represent multiple data points as an animation, or as somehow
 		arranged in space? Of course you can do both simultaneously with different
@@ -327,6 +318,36 @@
 
 		As a consequence, animations have to be first class. I don't yet know what
 		that entails, but it doesn't sound simple... Frame rate? Tweening? Layers?
+
+		If I implement this as the long pondered master-instance logic, then this
+		just becomes iteration of instances.
+
+		I still need to think about animations, but I don't, at the moment, think
+		that that the instantiation model matters for that.
+**** Masters and Instances
+		 See dedicated section in [[*Master%20Instance%20Logic][notes]].
+**** Stuff needed first
+		 We need to be able to edit shape properties either by dragging control
+		 points or just editing fields. For my purposes editing numbers is fine and
+		 quicker to do. Visual editing is still an important long term goal.
+
+		 We also refer to other shapes. That means that shapes need ids. Well, we're
+		 enforcing immutability so the shapes can be their own referents. What we
+		 really need is a way to refer to litanies of shapes.
+
+		 And we need a widget to switch between drawings, as well as bring one
+		 drawing into another (and place and orient it).
+*** Dynamic Property Lookup
+		It should be possible to set a property to a map in a master and have the
+		instances pick keys for the map. The key could either be a key proper or an
+		index from a vector.
+
+		Something like partial instantiation.
+
+		This is a very different take on the UI then I had been thinking previously
+		to this. It brings up the master-instance part of sketch again. That might
+		actually be a more robust solution to the space time problem then my current
+		thinking (which really hasn't had that much thought.
 *** Canvas isolation
 		Can we render multiple canvases in isolation from one another? We're going
 		to need to.
@@ -802,8 +823,8 @@
 		 itself? Well actors and objects are heavily related, so why don't we have the
 		 canvas state be a set of records. One for each visual object and one for the
 		 canvas itself (we want to be able to zoom and pan the canvas itself, and we
-		 need something to listen to clicks and create the constructor objects
-		 (special temporary visual objects that exist only to provide visual feedback
+											 need something to listen to clicks and create the constructor (objects
+		 special temporary visual objects that exist only to provide visual feedback
 		 when making new visual objects.
 **** Questions
 		 Should all visual objects be children of the canvas object? Should visual
@@ -1087,6 +1108,73 @@
 	 http://insider.zone/tools/client-side-url-redirect-generator/
 
 	 Redirects from static html. Not ideal, but should work in a pinch.
+** Master Instance Logic
+	 I can't find my notes on the topic. That's disturbing, there were a lot of
+	 them as I recall.
+
+	 The idea of masters and instances comes directly from sketchpad. Sutherland
+	 set instances to automatically track changes to masters. This has coupling
+	 and reuse issues that weren't apparent back then — at least I presume not;
+	 sketchpad was a single user tool — if I use the same master for two instances
+	 in disparate parts of a large project, I might forget that connection and
+	 change the master only thinking of one instance. Then we get to have fun
+	 tracking down the source of the bug.
+
+	 Instead I propose to keep the edit history for all time (or as much as
+	 possible) of all instances and masters and branch instances off of specific
+	 edits of masters. There should be a simple proceedure to edit a master and
+	 then update whichever instances you want to the new head of the master edit
+	 tree. If we add branching editing, we have git for illustrator. That's kind
+	 of cool, but not something I'm going to get working in any generality is a
+	 short timeframe.
+
+	 Back to the point.
+
+	 Everything is a master until every possible field is set. Any variables make
+	 it a master. This gets a bit tricky when you consider that computational
+	 futures on data or user input that we don't have yet isn't actually a
+	 variable, but I'm sure that can be worked out.
+
+	 How do we make the history tree as unobtrusive as possible? I'm afraid that
+	 editing anything will become an exercise in manual change propagation; that
+	 can't be allowed.
+
+	 We need a way to enforce that masters are fully instantiated before we let
+	 them go to the user — be exported, or whatever.
+
+	 We also need to distinguish between creating steps that define a shape
+	 (rectangle width, height, orientation), and incidental stuff like the exact
+	 position. Is the orientation incidental or inherent? The scale shouldn't
+	 be. Probably everything should be defined up to an affine transformation.
+
+	 That shouldn't be hard to accomplish. We just need to represent shapes by a
+	 single coordinate and a collection of vectors and scalars. The point is
+	 really only for reference. I bet I'm rediscovering really basic vector
+	 graphics. Time to read up. I never appreciate knowledge so much as when I've
+	 rediscovered an impoverished subset of it.
+
+	 So then an image will often be made up of a collection of affine txs of of
+	 other masters as well as some stuff drawn in from scratch (which could be
+	 construed as temporary, or not so temporary, masters).
+
+	 So rendering will have to walk down to the leaves of the tree, and apply
+	 affine txs as it recurs back up to the root. That sounds expensive but can
+	 probably be mathematically simplified, or just cached.
+
+	 I keep coming back to the idea that a rectangle is just lines. Does having a
+	 smaller set of primitives make my life easier, or harder? It reduces the
+	 number of decompositions the computer has to figure out, which is probably a
+	 bad thing that seems like a good thing.
+
+	 How do we keep track of the litanies of shapes? A doubly linked list isn't
+	 enough because of branching. Maybe we should have sort of master manager
+	 objects that contain the whole undo tree of edits to shapes. We should be
+	 able to check which tree a shape belongs to and access all leaves below
+	 it. What are the odds that we want to update a master to a non-leaf? Would it
+	 suffice to update it to a leaf and then hit undo a few times?
+
+	 Undotree navigation graphic? widget? complicated...
+
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
