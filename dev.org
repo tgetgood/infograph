@@ -183,6 +183,8 @@
 			down and done the math. Not my top priority though at the moment.
 		Draging and zooming should move the canvas around as if it were a map.
 
+		Zoom is a [[https://en.wikipedia.org/wiki/Homothetic_transformation][homothetic operation]].
+
 		Interactive infographics (those not exported to pngs, gifs, etc.) should be
 		able to pan and zoom as well if the author desires since this can allow
 		exploration of far more data than is possibile in a fixed size. Lazy
@@ -1176,6 +1178,7 @@
 
 		Undotree navigation graphic? widget? complicated...
 
+** Affine All the Way Down
 *** From notebook [2017-08-21 Mon]
 		Below I'm considering affine transformations to be of the form s + Mv + t,
 		where s, & t are translation vectors, v is the input, and M is the linear
@@ -1201,6 +1204,39 @@
 
 		Maybe I can also clean up the clunky inversion logic by just applying one
 		more affine tx at the very end of the chain before rendering.
+
+*** Musings [2017-08-23 Wed 12:05]
+		I'm getting more and more convinced that the representations of shapes from
+		the ground up as layered compositions of affine transformations of shapes is
+		the way to go. It has both the logical simplicity of a good proof and the
+		hierarchical nature of visual chunking which could make it easier to
+		represent shapes the way people perceive them and thus it might be easier to
+		teach the computer to do "the right thing". The right thing really just
+		means responding in a way that doesn't surprise the user, or surprises them
+		in a creative way. If surprised they should laugh or say aha! Otherwise the
+		computer is wrong. Great definition. Go home.
+
+		The html canvas object itself lets me set the affine transformation. That's
+		saves me an immense amount of work. I wonder if that will stunt the
+		algorithm's learning at all?
+
+		Using canvas atxs, I don't need any of the linear algebra logic I just set
+		up. I can go back to using numbers and clj vectors for scalars and
+		vectors. I don't think I need any special semantics...
+
+** Mandelbrot Demo
+	 Idea for a lazy data structure that represents the whole of R².
+
+	 Just use the grid. Bitree with neighbours (8 per grid) and children which are
+	 subgrids. At any given time only 4 grids will be on screen and the position
+	 and zoom level can be used to pick which ones are necessary. If we keep the
+	 whole tree in memory then it will expand in memory as we navigate around and
+	 the lazy-seqs get realised. Nota big deal for a demo. Alternately we could
+	 generate a data structure that drops doesn't retain any connections to its
+	 neighbours but each node of the grid has a lazy seq of neighbours, going back
+	 and forth loses the ability to cache.
+
+	 Easy lazy grid lines are another good demo of the lazy rendering.
 * Log
 ** Sketchpad D3
 	 Graphical interactive interactive infographic creation.
@@ -1501,3 +1537,11 @@
 	 Maybe it would be best if I switched it to a select a shape, and have its
 	 property window stuck open beneath the data window. Then we could implement
 	 editing of the properties. And computational properties.
+** [2017-08-23 Wed 12:26]
+	 I think it would be a good idea to split the project again. Not so much split
+	 as start a series of parallel experiments. Each can just cut and paste out
+	 chunks of code.
+
+	 Doing this as a monolith is hurting my ability to track several ideas in
+	 parallel. It's also reinforcing bad habits of wholesale refactoring that
+	 tends not to work.
