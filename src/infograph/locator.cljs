@@ -16,27 +16,22 @@
 
 (defmethod dist :line
   [{:keys [p q]} c]
-  (let [p (shapes/value p)
-        q (shapes/value q)
-        pq (geometry/v- q p)
-        t* (- (/ (geometry/dot (geometry/v- p c) pq)
+  (let [pq (geometry/- q p)
+        t* (- (/ (geometry/dot (geometry/- p c) pq)
                  (geometry/dot pq pq)))
         t (min 1 (max 0 t*))
-        s (geometry/v+ p (geometry/v* t pq))]
+        s (geometry/+ p (geometry/* t pq))]
     (geometry/dist s c)))
 
 (defmethod dist :circle
   [{:keys [c r]} p]
-  (let [d (geometry/dist p (shapes/value c))]
-    (js/Math.abs (- (shapes/value r)  d))))
+  (let [d (geometry/dist p (:v c))]
+    (js/Math.abs (- (:v r)  d))))
 
 (defmethod dist :rectangle
   [{:keys [p w h]} c]
   (if (and w h)
-    (let [[x y :as p]  (shapes/value p)
-          ;; HACK: All of the projection goodness is being undone by scalar
-          ;; height.
-          q  (geometry/v+ p w h)
+    (let [q  (geometry/+ p w h)
           p' [(first p) (second q)]
           q' [(first q) (second p)]]
       ;; REVIEW: This is the naive algorithm, but it comes out clinky, doesn't it?

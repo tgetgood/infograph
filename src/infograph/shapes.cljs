@@ -62,7 +62,7 @@
 (defmethod draw* :rectangle
   [ctx {:keys [style p w h]}]
   (when (and w h)
-    (canvas/rectangle ctx style p (geometry/v+ p w h))))
+    (canvas/rectangle ctx style p (geometry/+ p w h))))
 
 (defmethod draw* :frame
   [ctx {:keys [shapes]}]
@@ -83,10 +83,12 @@
   "Guard around draw*. Main purpose is to add useful error messages."
   ;; TODO: use a logger so that errors don't just pop up in the console in
   ;; production.
-  [ctx shape]
+  [ctx [shape {:keys [M b]}]]
   (if (nil? shape)
     (.error js/console "nil shape passed into draw!")
-    (draw* ctx shape)))
+    (do
+      (canvas/atx ctx (:v M) (:v b))
+      (draw* ctx shape))))
 
 ;; TODO: Really we want something like draw => if should-draw? try-draw,
 ;; try-draw => if can-draw? draw! else comp draw transform.
@@ -117,4 +119,3 @@
 
 (def instantiate impl/instantiate)
 (def project impl/project)
-(def value impl/value)

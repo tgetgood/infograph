@@ -1,5 +1,6 @@
 (ns infograph.db
   (:require [cljs.spec.alpha :as spec]
+            [infograph.geometry :as geometry]
             [infograph.shapes :as shapes]
             [re-frame.db :as re-frame.db]))
 
@@ -104,7 +105,10 @@
                          :origin [0 0]
                          :offset [0 0]
                          :width  0
-                         :height 0}}})
+                         :height 0}
+            :atx        {:M (geometry/matrix [[1 0]
+                                              [0 1]])
+                         :b (geometry/vector [0 0])}}})
 
 
 (defn spec-db []
@@ -121,7 +125,7 @@
 (defn input [db]
   {:input (:input db)})
 
-(def window-path [:canvas :window])
+(def window-path [:canvas :atx])
 
 (defn window [db]
   (get-in db window-path))

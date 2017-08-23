@@ -35,7 +35,8 @@
 
 (defprotocol ICanvas
   ;; TODO: Presumably I should wrap the entire canvas API.
-  (clear [this])
+  (clear [this] "Clears the entire canvas")
+  (atx [this m b] "Sets the affine transformation of the canvas")
   (pixel [this style p])
   (line [this style p q])
   (rectangle [this style p q]
@@ -60,11 +61,12 @@
   "Converts coord maps and coord vectors to vectors. Also checks nothing is
   nil."
   [p]
-  {:pre [(or (map? p) (vector? p))]
+  #_{:pre [(or (map? p) (vector? p))]
    :post [(every? number? %)]}
-  (if (map? p)
+  #_(if (map? p)
     [(:x p) (:y p)]
-    p))
+    p)
+  (:v p))
 
 ;;;;; Canvas
 ;; REVIEW: Would it be terrible form to take garbage values and just abort the
@@ -77,6 +79,8 @@
     (let [width (.-clientWidth elem)
           height (.-clientHeight elem)]
       (.clearRect ctx 0 0 width height)))
+  (atx [_ [[a c] [b d]] [e f]]
+    (.setTransform ctx a b c d e f))
   (pixel [_ style p]
     (let [[x y] (parse p)]
       (with-style ctx style

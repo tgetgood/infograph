@@ -56,4 +56,4 @@
    [(re-frame/subscribe [:r2-canvas])
     (re-frame/subscribe [:window])])
  (fn [[canvas window]]
-   (reset! last-draw (shapes/project canvas window))))
+   (reset! last-draw [canvas window])))

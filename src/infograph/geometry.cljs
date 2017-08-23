@@ -1,39 +1,63 @@
 (ns infograph.geometry
-    "Geometric Utilities.")
+  "Geometric Utilities."
+  (:refer-clojure :exclude [+ - * val vector])
+  (:require [infograph.geometry.impl :as impl]
+            [infograph.geometry.protocols :as p]))
 
-;;;; Extending arithmetic operators to handle vectors.
 
-(defn v+
-  ([] [0 0])
-  ([p] p)
-  ([p q] (mapv + p q))
-  ([p q & more]
-   (reduce v+ (v+ p q) more)))
+;;;;; Geometric operators
+(defn +
+  ([] impl/zero)
+  ([x] x)
+  ([x y] (p/+ x y))
+  ([x y & more] (reduce + (p/+ x y) more)))
 
-(defn v- [p q]
-  (mapv - p q))
+(defn -
+  ([] impl/zero)
+  ([x] (p/- x))
+  ([x y] (p/- x y))
+  ([x y & more] (reduce - (p/- x y) more)))
 
-(defn v*
-  "Returns scalar multiplication of a*v"
-  [a v]
-  (when (and (number? a) (vector? v))
-    (mapv (partial * a) v)))
+(defn *
+  ([] impl/unit)
+  ([x] x)
+  ([x y] (p/* x y))
+  ([x y & more] (reduce * (p/* x y) more)))
 
-(defn dot
-  "Returns the Euclidean inner product of p and q."
-  [p q]
-  (when(every? #(and (number? %) (not (js/isNaN %))) (concat p q))
-    (reduce + (map * p q))))
+(def norm p/norm)
+(def dot p/dot)
 
-(defn norm
-  "Returns the norm (length) of vector v in Euclidean space."
-  [v]
-  (when v
-    (js/Math.sqrt (dot v v))))
+;;;;; Types
 
+(def scalar impl/scalar)
+(def vector impl/vector)
+(def matrix impl/matrix)
+
+;; FIXME: Disturbing convention.
+(def val (partial :v))
+
+;;;;; Affine Transformations
+
+(def y-inversion
+  "Affine tx to convert image to CG coords (origin in top left) for rendering."
+  {:m (matrix [[1 0] [0 -1]]) :b (vector [0 0])})
+
+(defn compose [{M :m b :b} {N :m a :b}]
+  {:m (+ M N)
+   :b (+ a b)})
+
+(defn atx [{:keys [m b]} v]
+  (+ (* m v) b))
+
+;;;;; Distance
+
+;; The distance between vectors isn't well defined. When you impose the
+;; semantics of vectors being points minus the origin then the distance between
+;; those points is well defined. The two operations are not the same thing.
 (defn dist
   "Returns the distance between p and q in R^n"
   [p q]
+  (.log js/console p q)
   (if (and p q)
-    (norm (v- q p))
+    (norm (- (vector q) (vector p)))
     js/Infinity))

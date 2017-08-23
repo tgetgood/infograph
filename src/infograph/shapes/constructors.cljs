@@ -1,6 +1,7 @@
 (ns infograph.shapes.constructors
   (:require [infograph.geometry :as geometry]
-            [infograph.shapes.impl :as impl]))
+            [infograph.shapes.impl :as impl]
+            [infograph.geometry.impl :refer [Vector Scalar]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; DSL
@@ -15,14 +16,14 @@
 (defn computation [q f]
   (cursor (impl/ComputationSchema. q f)))
 
-(defn point [[x y]]
-  (impl/Coordinate-2D. x y))
+(defn point [v]
+  (Vector. v))
 
 (defn c-point [query]
   (computation query point))
 
 (defn v2 [x y]
-  (impl/Vector-2D. x y))
+  (Vector. [x y]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; GUI Constructors
@@ -48,4 +49,4 @@
    :style {}
    :c     (point c)
    :r     (computation [:strokes 0 :current]
-                       #(impl/Scalar. (geometry/dist c %)))})
+                       #(Scalar. (geometry/dist c %)))})

@@ -62,15 +62,15 @@
     ([this path]
      [value-dropper (str this) path]))
 
-  infograph.shapes.impl/Coordinate-2D
+  #_infograph.shapes.impl/Coordinate-2D
+  #_(render-value [this q]
+    (pair-table this q))
+
+  infograph.geometry.impl/Vector
   (render-value [this q]
     (pair-table this q))
 
-  infograph.shapes.impl/Vector-2D
-  (render-value [this q]
-    (pair-table this q))
-
-  infograph.shapes.impl/Scalar
+  infograph.geometry.impl/Scalar
   (render-value [this q]
     [value-dropper (render-value (:v this)) (conj q :v)])
 

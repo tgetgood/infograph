@@ -60,6 +60,9 @@
 
 (defn coord-adjust [x o z dz]
   ;; FIXME: Uncentred
+  ;; p -> zc + dz * zc->p
+  ;; where zc->p is the vector from zc to p
+  ;; Why does notation in an editor suck so much?
   (* dz o))
 
 (defn- adjust-origin

@@ -34,16 +34,9 @@
   transformed to pixel coordinates via linear (affine?) projection."
   (project [this window]))
 
-;; REVIEW: Maybe call this unpackable/unpack?
-(defprotocol IValue
-  "Records that have a concrete value but need types for other kinds of
-  polymorphism, can express that value here."
-  (value [this]))
-
 ;;; Generic Implementations
 
 (extend-recursive-tx Instantiable instantiate)
-(extend-recursive-tx Projectable project)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Schemata Types
@@ -69,46 +62,3 @@
   ComputationSchema
   (instantiate [this input]
     ((.-formula this) (get-in input (.-query this)))))
-
-;;; Projectables
-
-(extend-protocol IValue
-  default
-  (value [this] this))
-
-(defrecord Vector-2D [x y]
-  Projectable
-  (project [_ w]
-    (window/vflip (window/project-vector w [x y])))
-
-  Instantiable
-  (instantiate [_ data]
-    (Vector-2D. (instantiate x data) (instantiate y data)))
-
-  IValue
-  (value [_]
-    [x y]))
-
-(defrecord Coordinate-2D [x y]
-  Projectable
-  (project [_ w]
-    (window/invert w (window/project w [x y])))
-
-  Instantiable
-  (instantiate [_ data]
-    (Coordinate-2D. (instantiate x data) (instantiate y data)))
-
-  IValue
-  (value [_] [x y]))
-
-(defrecord Scalar [v]
-  Projectable
-  (project [_ w]
-    (window/project-scalar w v))
-
-  Instantiable
-  (instantiate [_ data]
-    (Scalar. (instantiate v data)))
-
-  IValue
-  (value [_] v))
