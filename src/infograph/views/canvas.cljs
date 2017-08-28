@@ -5,22 +5,6 @@
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]))
 
-(def resize-debouncer
-  "Ad hoc debouncer for window resize events."
-  (let [last-invoke (atom nil)
-        go? (atom false)]
-    (fn [canvas reset?]
-      (if (true? reset?)
-        (reset! last-invoke nil)
-        (let [now (js/window.performance.now)]
-          (if (< 500 (- now @last-invoke))
-            (do
-              (re-frame/dispatch [:infograph.events/resize-canvas canvas])
-              (reset! last-invoke now)
-              (reset! go? false))
-            (when-not @go?
-              (js/setTimeout  #(resize-debouncer canvas) (- now @last-invoke))
-              (reset! go? true))))))))
 
 (defn canvas-inner []
   (reagent/create-class
@@ -28,16 +12,15 @@
                             (let [drawing (:hack (reagent/props this))
                                   elem (reagent/dom-node this)]
                               (set! (.-onresize js/window)
-                                    (partial resize-debouncer elem))
+                                    #(events/resize-canvas-debounced elem))
+                              (re-frame/dispatch [::events/resize-canvas elem])
                               (re-frame/dispatch
-                               [(events/q :resize-canvas) elem])
-                              (re-frame/dispatch
-                               [(events/q :redraw-canvas) elem drawing])))
+                               [::events/redraw-canvas elem drawing])))
     :component-did-update (fn [this]
                             (let [drawing (:hack (reagent/props this))
                                   elem (reagent/dom-node this)]
                               (re-frame/dispatch
-                               [(events/q :redraw-canvas) elem drawing])))
+                               [::events/redraw-canvas elem drawing])))
     :reagent-render       (let [mode (re-frame/subscribe [:input-mode])]
                             (fn []
                               [:canvas

@@ -1,14 +1,34 @@
 (ns infograph.events
-  (:require [infograph.canvas :as canvas]
+  (:require-macros [cljs.core.async.macros :refer [go-loop]])
+  (:require [cljs.core.async :as async]
+            [infograph.canvas :as canvas]
             [infograph.db :as db]
             [infograph.shapes :as shapes]
             [infograph.subs :as subs]
             [re-frame.core :as re-frame]))
 
-;;;;; Hacky bits
+;;;;; Debounced events
 
-(defn q [name]
-  (keyword :infograph.events name))
+(defn debouncer
+  "Takes a t timeout and function f, and returns a function which when called
+  invokes f at most once every t ms. The return value of f is thrown away.
+  Calling the returned db with nil shuts down the debouncer.
+  Intended for async event handlers."
+  [t f]
+  (let [ch (async/chan (async/sliding-buffer 1))]
+    (go-loop []
+      (when-let [v (async/<! ch)]
+        (f v)
+        (async/<! (async/timeout t))
+        (recur)))
+    (fn [v]
+      ;; Ca\'t put nil on a channel, why not use it to kill the machine?
+      (if (nil? v)
+        (async/close! ch)
+        (async/put! ch v)))))
+
+(def resize-canvas-debounced
+  (debouncer 500 #(re-frame/dispatch [::resize-canvas %])))
 
 ;;;;; Events
 
@@ -29,14 +49,14 @@
 
 (re-frame/reg-event-fx
  ::resize-canvas
- (fn [{db :db [_ canvas] :event}]
+ (fn [{db :db [_ elem] :event}]
    (let [[width height :as dim] (canvas/canvas-container-dimensions)
          offset                 (canvas/canvas-container-offset)]
      (array-map
       :db              (update-in db db/window-path assoc
                                   :width width :height height :offset offset)
-      ::resize-canvas! [canvas dim]
-      ::redraw-canvas! [(canvas/context canvas) @subs/last-draw]))))
+      :dispatch-later [{:ms 0 :dispatch [::redraw-canvas elem @subs/last-draw]}]
+      ::resize-canvas! [elem dim]))))
 
 (re-frame/reg-event-fx
  ::redraw-canvas

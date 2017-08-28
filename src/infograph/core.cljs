@@ -1,13 +1,13 @@
 (ns infograph.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [infograph.events]
+            [infograph.events :as events]
             [infograph.subs]
             [infograph.views :as views]
             [infograph.config :as config]))
 
 (defn clear-window-resize-listener! []
-  (set! (.-onresize js/window) nil))
+  (events/resize-canvas-debounced nil))
 
 (defn dev-setup []
   (when config/debug?
