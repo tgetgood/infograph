@@ -1545,3 +1545,32 @@
 	 Doing this as a monolith is hurting my ability to track several ideas in
 	 parallel. It's also reinforcing bad habits of wholesale refactoring that
 	 tends not to work.
+** [2017-08-25 Fri 15:19]
+	 There are so many intertwinned nuances. The infinite grid data structure, the
+	 draw and zoom interactions, the window ns, affine txs, canvas element
+	 styling...
+
+	 As it is, these things are not cleanly separated. I don't know how to
+	 separate them. This needs a lot more thought. The best way to accomplish it
+	 is, I believe, a series of totally separate experiments.
+
+	 Experiment 1)
+
+	 Draw basic shapes. Group them and build more complex shapes with the
+	 group. Here zoom and pan are irrelevant.
+
+	 Experiment 2)
+
+	 Basic animations
+
+	 Experiment 3)
+
+	 Draw a grid on the canvas that is actually a lazy infinite structure.
+
+	 Experiment 4)
+
+	 Mandlebrot set. Infinite zoom and pan.
+
+	 Experiment 5)
+
+	 Masters and instances. Save a picture and reuse it in others.
