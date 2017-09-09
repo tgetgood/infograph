@@ -194,6 +194,11 @@
 		Trivial examples: the Mandlebrot set. or any fractal. All of Facebook as a
 		friend graph (that would require more than a little data magic but I'm sure
 		somebody will get a kick out of making a library for it).
+**** Solution [2017-08-30 Wed 20:00]
+		 So 2 months of putting this off between 4 half assed attempts and I now
+		 have a solution.
+
+		 It's critical to realise that there are 3 spaces we're dealing with.
 *** Drag hover highlighting in property windows
 		We need to indicate clearly what will be effected on drop. Highlighting the
 		candidate to be replaced seems like a good solution.
@@ -1574,3 +1579,26 @@
 	 Experiment 5)
 
 	 Masters and instances. Save a picture and reuse it in others.
+** [2017-09-08 Fri 09:19]
+	 On further thought, these experiments don't get to the heart of the
+	 matter. The mandelbrot set in particular isn't important at all, it's just a
+	 curious tangent.
+
+	 The basic drawing and animation are important because they cleaned up the
+	 conception of what I'm doing. I realise that most of the machinery that I
+	 built is solving incidental problems. Also, I now have a working, simplified
+	 window pan and zoom system.
+
+*** Important Systems Outstanding
+		- Mapping events to objects on the canvas
+
+		- Visual editing of visual objects
+
+		- Recursive affine txs of shapes
+
+		- Master - instance logic
+
+*** Incidental Observations
+		canvas-demos does 80% of what infograph does with about a third of the
+		code. How is that? It's not just that that last 20% is hard; that particular
+		20% isn't important. This needs a bit of analysis.
