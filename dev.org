@@ -1602,3 +1602,53 @@
 		canvas-demos does 80% of what infograph does with about a third of the
 		code. How is that? It's not just that that last 20% is hard; that particular
 		20% isn't important. This needs a bit of analysis.
+
+** [2017-09-12 Tue 10:48]
+	 Always keep in mind that the point is to get the computer to eventually
+	 generalise the shapes you draw and suggest better ones. Assisted discovery.
+
+	 Recursive shapes defined by nested affine transforms was amazingly simple to
+	 implement. Canvas did good job with that. Or maybe it's just the mathematical
+	 simplicity of the problem shining through. Still canvas made it trivial to
+	 implement (except for not exposing the current transform...).
+
+	 We also now have a generalised master-instance logic where shapes are just
+	 built up from compositions of other shapes and modifying transforms. If you
+	 swap out the inner shapes, the outer one updates automatically. Of course we
+	 still need change tracking and versioning.
+
+	 Both visual editing and code mirroring require more than just a canvas. I've
+	 got to decide between using something like codemirror, or implementing my own
+	 very basic code editor. I can start with a textarea again for the inital
+	 attempt. Why make it more complicated than I need at present?
+
+	 That still leaves the visual editing. I need widgets to do things like select
+	 the current constructor, show that a given shape is selected, choose a colour
+	 or other style info, etc.. Plus I need a clear and intuitive way to import
+	 one image into another and manipulate it. Touch makes most of that far
+	 easier. Mostly because two finger touch implicitely chooses an origin for the
+	 transformations.
+
+	 So I suppose I should start with visual editing, since I need that before I
+	 can generate any code to display.
+
+	 Focus on touch transforms, and deal with control point widgets later
+	 on. That's a whole other design task. Not an especially hard one, but in a
+	 different vein.
+
+	 Try to keep a clean separation between the core drawing logic and the shape
+	 manipulation logic. In particular, don't tie them together with a type system
+	 like you did last time.
+
+	 Selection and control widgets will depend on the kind of shape they modify,
+	 of course, but those shapes need to be open and closed.
+
+	 Windowing is going to make life difficult. The user is going to have an open
+	 number of canvases, and each will potentially need its own window. Actually
+	 that's not too bad, I just need to wrap up the logic so that we can import
+	 multiple canvases into a single app.
+
+	 No, that's not necessary. It would suffice to keep a list of shape, window
+	 pairs and swap them out on a single canvas. Getting rid of windowing on
+	 drawings would simplify things, but at the same time it would make it harder
+	 to zoom in to correct fine details.
